@@ -1,30 +1,34 @@
 package Models;
 
 import Utilities.Utils;
+import org.javatuples.Pair;
 
 import java.util.ArrayList;
 import java.util.Map;
 
 public class MDVRP {
 
-    private Map<Integer, ArrayList<Double>> depots;
-    private Map<Integer, ArrayList<Double>> customers;
-    private int numDepots;
-    private int numCustomers;
-    private int maxVehicles;
-    private double[][] distances;
+    private final Map<Integer, ArrayList<Double>> depots;
+    private final Map<Integer, ArrayList<Double>> customers;
+    private final int numDepots;
+    private final int numCustomers;
+    private final int maxVehicles;
+    private final double maxLoad;
+    private final double[][] distances;
 
     public MDVRP(
             Map<Integer, ArrayList<Double>> depots,
             Map<Integer, ArrayList<Double>> customers,
             int numDepots,
             int numCustomers,
-            int maxVehicles) {
+            int maxVehicles,
+            double maxLoad) {
         this.depots = depots;
         this.customers = customers;
         this.numDepots = numDepots;
         this.numCustomers = numCustomers;
         this.maxVehicles = maxVehicles;
+        this.maxLoad = maxLoad;
         this.distances = new double[numDepots + numCustomers][numDepots + numCustomers];
 
         this.initDistances();
@@ -34,72 +38,48 @@ public class MDVRP {
         return depots;
     }
 
-    public void setDepots(Map<Integer, ArrayList<Double>> depots) {
-        this.depots = depots;
-    }
-
     public Map<Integer, ArrayList<Double>> getCustomers() {
         return customers;
-    }
-
-    public void setCustomers(Map<Integer, ArrayList<Double>> customers) {
-        this.customers = customers;
     }
 
     public int getNumDepots() {
         return numDepots;
     }
 
-    public void setNumDepots(int numDepots) {
-        this.numDepots = numDepots;
-    }
-
     public int getNumCustomers() {
         return numCustomers;
-    }
-
-    public void setNumCustomers(int numCustomers) {
-        this.numCustomers = numCustomers;
     }
 
     public int getMaxVehicles() {
         return maxVehicles;
     }
 
-    public void setMaxVehicles(int maxVehicles) {
-        this.maxVehicles = maxVehicles;
+    public double getMaxLoad() { return maxLoad; }
+
+    public double getC2CDistance(int c1, int c2) {
+        return this.distances[c1 + numDepots][c2 + numDepots];
     }
 
-    public double[][] getDistances() {
-        return distances;
+    public double getD2CDistance(int d1, int c2) {
+        return this.distances[d1][c2 + numDepots];
     }
 
-    public void setDistances(double[][] distances) {
-        this.distances = distances;
+    public ArrayList<Double> getCustomer(int customerId) {
+        return this.customers.get(customerId);
     }
 
-    public double getC2CDistance(Customer c1, Customer c2) {
-        int c1Id = c1.getId();
-        int c2Id = c2.getId();
-
-        return this.distances[c1Id + numDepots][c2Id + numDepots];
-    }
-
-    public double getD2CDistance(Depot d1, Customer c2) {
-        int d1Id = d1.getId();
-        int c2Id = c2.getId();
-
-        return this.distances[d1Id][c2Id + numDepots];
+    public ArrayList<Double> getDepot(int depotId) {
+        return this.customers.get(depotId);
     }
 
     private void initDistances() {
-        for(int depot1 = 0; depot1 < this.numDepots; depot1++) {
+        for (int depot1 = 0; depot1 < this.numDepots; depot1++) {
 
             ArrayList<Double> depot1Loc = this.depots.get(depot1);
             double x1 = depot1Loc.get(0);
             double y1 = depot1Loc.get(1);
 
-            for(int depot2 = 0; depot2 <= depot1; depot2++) {
+            for (int depot2 = 0; depot2 <= depot1; depot2++) {
 
                 if (depot1 == depot2) {
 
@@ -118,7 +98,7 @@ public class MDVRP {
                 }
             }
 
-            for(int customer = 0; customer < numCustomers; customer++) {
+            for (int customer = 0; customer < numCustomers; customer++) {
                 ArrayList<Double> customerLoc = this.customers.get(customer);
                 double x2 = customerLoc.get(0);
                 double y2 = customerLoc.get(1);
@@ -129,7 +109,7 @@ public class MDVRP {
             }
         }
 
-        for(int customer1 = 0; customer1 < numCustomers; customer1++) {
+        for (int customer1 = 0; customer1 < numCustomers; customer1++) {
 
             ArrayList<Double> customer1Loc = this.customers.get(customer1);
             double x1 = customer1Loc.get(0);
@@ -146,5 +126,23 @@ public class MDVRP {
                 this.distances[customer2 + numDepots][customer1 + numDepots] = dist;
             }
         }
+    }
+
+    public Pair<Integer, Double> getClosestDepot(int customerId) {
+        double minDistance = Double.POSITIVE_INFINITY;
+        int closestDepot = 0;
+
+
+        for (int depotId = 0; depotId < this.numDepots; depotId++ ) {
+
+            double currentDistance = getD2CDistance(depotId, customerId);
+
+            if (currentDistance < minDistance) {
+                minDistance = currentDistance;
+                closestDepot = depotId;
+            }
+        }
+
+        return new Pair<>(closestDepot, minDistance);
     }
 }

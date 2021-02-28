@@ -29,16 +29,17 @@ public class ProblemInit {
         int numCustomers = Integer.parseInt(problemInfoSplit[1]);
         int numDepots = Integer.parseInt(problemInfoSplit[2]);
 
+        List<String> maxLoadLine = Arrays.asList(fileContent.get(1).split("\\s+"));
+        Double maxLoad = Double.parseDouble(maxLoadLine.get(0));
+
         Map<Integer, ArrayList<Double>> depots = new HashMap<>();
 
         // Iterate depots and extract data
         for(int depot = 1; depot < numDepots + 1; depot++) {
-            List<String> depotEntryOne = Arrays.asList(fileContent.get(depot).split("\\s+"));
-            List<String> depotEntryTwo = Arrays.asList(fileContent.get(depot + numCustomers + numDepots).split("\\s+"));
+            List<String> depotEntry = Arrays.asList(fileContent.get(depot + numCustomers + numDepots).split("\\s+"));
 
-            Double xDepot = Double.parseDouble(depotEntryTwo.get(1));
-            Double yDepot = Double.parseDouble(depotEntryTwo.get(2));
-            Double maxLoad = Double.parseDouble(depotEntryOne.get(0));
+            Double xDepot = Double.parseDouble(depotEntry.get(1));
+            Double yDepot = Double.parseDouble(depotEntry.get(2));
 
             ArrayList<Double> depotLoc = new ArrayList<>(Arrays.asList(xDepot, yDepot, maxLoad));
             depots.put(depot - 1, depotLoc);
@@ -57,7 +58,7 @@ public class ProblemInit {
             customers.put(customer - numDepots - 1, customerLoc);
         }
 
-        return new MDVRP(depots, customers, numDepots, numCustomers, maxVehicles);
+        return new MDVRP(depots, customers, numDepots, numCustomers, maxVehicles, maxLoad);
 
 
     }
