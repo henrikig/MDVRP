@@ -7,9 +7,17 @@ public class Vehicle {
     private final double maxLoad;
     private double currentLoad;
     private ArrayList<Customer> customers;
+    private MDVRP problem;
+    private Depot depot;
+    private double routeCost;
+    private boolean updated;
 
-    public Vehicle(double maxLoad) {
+    public Vehicle(double maxLoad, MDVRP problem, Depot depot) {
         this.maxLoad = maxLoad;
+        this.problem = problem;
+        this.depot = depot;
+        this.updated = true;
+        this.customers = new ArrayList<>();
     }
 
     public double getMaxLoad() {
@@ -24,18 +32,87 @@ public class Vehicle {
         return customers;
     }
 
+    public Customer getCustomer(int i) {
+        return this.customers.get(i);
+    }
+
+    public Customer getFirstCustomer() {
+        return this.customers.get(0);
+    }
+
+    public Customer getLastCustomer() {
+        return this.customers.get(this.customers.size() - 1);
+    }
+
+    public boolean getFeasibility() {
+        return this.currentLoad <= this.maxLoad;
+    }
+
     public boolean insertCustomer(Customer customer) {
         double demand = customer.getDemand();
 
         if (this.currentLoad + demand < this.maxLoad) {
 
-            this.currentLoad = this.currentLoad + demand;
+            this.currentLoad += demand;
             this.customers.add(customer);
 
             return true;
+        }
+        return false;
+    }
 
+    public void forceInsertCustomer(Customer customer) {
+        this.currentLoad += customer.getDemand();
+        this.customers.add(customer);
+    }
+
+    public void insertCustomerByIndex(int i, Customer customer) {
+        this.currentLoad += customer.getDemand();
+        this.customers.add(i, customer);
+    }
+
+    public void removeCustomerByIndex(int i) {
+        Customer c = this.customers.remove(i);
+        this.currentLoad -= c.getDemand();
+    }
+
+    public void clearRoute() {
+        this.customers.clear();
+        this.setUpdated();
+    }
+
+    public double getRouteCost() {
+        if (this.updated) {
+            updateRouteCost();
+            this.updated = false;
+        }
+        return this.routeCost;
+    }
+
+    private void updateRouteCost() {
+        this.routeCost = 0;
+
+        if (customers.size() == 0) {
+            return;
         }
 
-        return false;
+        double depotDistance = this.problem.getD2CDistance(this.depot.getId(), this.customers.get(0).getId());
+
+        if (customers.size() == 1) {
+            this.routeCost += 2 * depotDistance;
+            return;
+        } else {
+            this.routeCost += depotDistance;
+        }
+
+        for (int i = 0; i < customers.size() - 1; i++) {
+            this.routeCost += this.problem.getC2CDistance(this.customers.get(i).getId(), this.customers.get(i + 1).getId());
+        }
+
+        this.routeCost += this.problem.getD2CDistance(this.depot.getId(), this.customers.get(this.customers.size() - 1).getId());
+    }
+
+    public void setUpdated() {
+        this.updated = true;
     }
 }

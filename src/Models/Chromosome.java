@@ -59,7 +59,7 @@ public class Chromosome {
             ArrayList<Customer> depotCustomers = customers.get(depotId);
             Collections.shuffle(depotCustomers);
 
-            Depot depot = new Depot(depotId, customers.get(depotId), this.maxLoad, this.maxVehicles);
+            Depot depot = new Depot(depotId, customers.get(depotId), this.maxLoad, this.maxVehicles, this.problem);
             depots.add(depot);
         }
     }

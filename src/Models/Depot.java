@@ -9,12 +9,15 @@ public class Depot {
     private ArrayList<Vehicle> vehicles;
     private final double maxLoad;
     private final int maxVehicles;
+    private final MDVRP problem;
 
-    public Depot(int id, ArrayList<Customer> customers, double maxLoad, int maxVehicles) {
+    public Depot(int id, ArrayList<Customer> customers, double maxLoad, int maxVehicles, MDVRP problem) {
         this.id = id;
         this.customers = customers;
+        this.vehicles = new ArrayList<>();
         this.maxLoad = maxLoad;
         this.maxVehicles = maxVehicles;
+        this.problem = problem;
 
         initVehicles();
     }
@@ -33,23 +36,36 @@ public class Depot {
 
     private void initVehicles() {
         for (int i = 0; i < maxVehicles; i++) {
-            this.vehicles.add(new Vehicle(this.maxLoad));
+            this.vehicles.add(new Vehicle(this.maxLoad, this.problem, this));
         }
     }
 
     public void scheduleRoutes() {
-        int vehicleCount = 0;
+        for (Vehicle vehicle : vehicles) {
+            vehicle.clearRoute();
+        }
+
+        int vehicleNum = 0;
 
         for (Customer customer : customers) {
 
-            Vehicle currentVehicle = vehicles.get(vehicleCount);
+            Vehicle currentVehicle = vehicles.get(vehicleNum);
 
             if (!currentVehicle.insertCustomer(customer)) {
-                vehicleCount++;
+                if (!(vehicleNum >= vehicles.size() - 1)) {
+                    vehicleNum++;
+                }
 
-                currentVehicle = vehicles.get(vehicleCount);
-                currentVehicle.insertCustomer(customer);
+                currentVehicle = vehicles.get(vehicleNum);
+                currentVehicle.forceInsertCustomer(customer);
             }
+        }
+
+        for (int i = 0; i < this.vehicles.size(); i++) {
+            double deltaCost = 0.0;
+
+            Customer lastCustomer = this.vehicles.get(i).getLastCustomer();
+            
         }
     }
 }
