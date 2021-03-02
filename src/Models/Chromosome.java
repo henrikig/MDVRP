@@ -69,4 +69,9 @@ public class Chromosome {
             depot.scheduleRoutes();
         }
     }
+
+    public double getFitness() {
+        this.fitness = depots.stream().mapToDouble(Depot::getRouteCosts).sum();
+        return fitness;
+    }
 }

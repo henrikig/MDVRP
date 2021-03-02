@@ -32,6 +32,10 @@ public class Vehicle {
         return customers;
     }
 
+    public int getNumCustomers() {
+        return this.customers.size();
+    }
+
     public Customer getCustomer(int i) {
         return this.customers.get(i);
     }
@@ -42,6 +46,10 @@ public class Vehicle {
 
     public Customer getLastCustomer() {
         return this.customers.get(this.customers.size() - 1);
+    }
+
+    public Customer getSecondLastCustomer() {
+        return this.customers.get(this.customers.size() - 2);
     }
 
     public boolean getFeasibility() {
@@ -71,9 +79,23 @@ public class Vehicle {
         this.customers.add(i, customer);
     }
 
+    public void insertFirstCustomer(Customer customer) {
+        this.currentLoad += customer.getDemand();
+        this.customers.add(0, customer);
+    }
+
     public void removeCustomerByIndex(int i) {
         Customer c = this.customers.remove(i);
         this.currentLoad -= c.getDemand();
+    }
+
+    public void removeLastCustomer() {
+        Customer c = this.customers.remove(this.customers.size() - 1);
+        this.currentLoad -= c.getDemand();
+    }
+
+    public boolean testDemandIncrement(double demand) {
+        return this.currentLoad + demand <= this.maxLoad;
     }
 
     public void clearRoute() {

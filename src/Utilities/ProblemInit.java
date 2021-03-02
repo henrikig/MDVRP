@@ -30,7 +30,7 @@ public class ProblemInit {
         int numDepots = Integer.parseInt(problemInfoSplit[2]);
 
         List<String> maxLoadLine = Arrays.asList(fileContent.get(1).split("\\s+"));
-        Double maxLoad = Double.parseDouble(maxLoadLine.get(0));
+        Double maxLoad = Double.parseDouble(maxLoadLine.get(1));
 
         Map<Integer, ArrayList<Double>> depots = new HashMap<>();
 

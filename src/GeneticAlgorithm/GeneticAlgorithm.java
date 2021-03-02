@@ -3,6 +3,7 @@ package GeneticAlgorithm;
 import Models.Chromosome;
 import Models.MDVRP;
 import Utilities.Parameters;
+import Utilities.ProblemInit;
 
 import java.util.ArrayList;
 
@@ -32,5 +33,18 @@ public class GeneticAlgorithm {
         for (Chromosome chromosome : population) {
             chromosome.scheduleRoutes();
         }
+    }
+
+    public void getFitness() {
+        for (Chromosome c : population) {
+            System.out.println(c.getFitness());
+        }
+    }
+
+    public static void main(String[] args) {
+        MDVRP problem = ProblemInit.initializeProblem();
+        GeneticAlgorithm ga = new GeneticAlgorithm(problem);
+        ga.main();
+        ga.getFitness();
     }
 }
