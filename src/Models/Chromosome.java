@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Chromosome {
+public class Chromosome implements Comparable<Chromosome> {
 
     private MDVRP problem;
     private ArrayList<Depot> depots = new ArrayList<>();
@@ -73,5 +73,15 @@ public class Chromosome {
     public double getFitness() {
         this.fitness = depots.stream().mapToDouble(Depot::getRouteCosts).sum();
         return fitness;
+    }
+
+    @Override
+    public int compareTo(Chromosome o) {
+        if (this.getFitness() == o.getFitness()) {
+            return 0;
+        } else if (this.getFitness() > o.getFitness()) {
+            return -1;
+        }
+        return 1;
     }
 }

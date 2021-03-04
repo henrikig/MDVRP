@@ -7,8 +7,8 @@ public class Vehicle {
     private final double maxLoad;
     private double currentLoad;
     private ArrayList<Customer> customers;
-    private MDVRP problem;
-    private Depot depot;
+    private final MDVRP problem;
+    private final Depot depot;
     private double routeCost;
     private boolean updated;
 
@@ -18,6 +18,7 @@ public class Vehicle {
         this.depot = depot;
         this.updated = true;
         this.customers = new ArrayList<>();
+        this.currentLoad = 0.0;
     }
 
     public double getMaxLoad() {
@@ -56,13 +57,12 @@ public class Vehicle {
         return this.currentLoad <= this.maxLoad;
     }
 
-    public boolean insertCustomer(Customer customer) {
+    public boolean insertCustomerIfFeasible(Customer customer) {
         double demand = customer.getDemand();
 
         if (this.currentLoad + demand < this.maxLoad) {
 
-            this.currentLoad += demand;
-            this.customers.add(customer);
+            this.insertCustomer(customer);
 
             return true;
         }
@@ -70,28 +70,39 @@ public class Vehicle {
     }
 
     public void forceInsertCustomer(Customer customer) {
-        this.currentLoad += customer.getDemand();
-        this.customers.add(customer);
+        this.insertCustomer(customer);
     }
 
     public void insertCustomerByIndex(int i, Customer customer) {
-        this.currentLoad += customer.getDemand();
-        this.customers.add(i, customer);
+        this.insertCustomer(i, customer);
     }
 
     public void insertFirstCustomer(Customer customer) {
-        this.currentLoad += customer.getDemand();
-        this.customers.add(0, customer);
+        this.insertCustomer(0, customer);
     }
 
     public void removeCustomerByIndex(int i) {
-        Customer c = this.customers.remove(i);
-        this.currentLoad -= c.getDemand();
+        this.removeCustomer(i);
     }
 
     public void removeLastCustomer() {
-        Customer c = this.customers.remove(this.customers.size() - 1);
+        this.removeCustomer(this.customers.size() - 1);
+    }
+
+    private void insertCustomer(Customer customer) {
+        this.insertCustomer(this.customers.size(), customer);
+    }
+
+    private void insertCustomer(int i, Customer customer) {
+        this.currentLoad += customer.getDemand();
+        this.setUpdated();
+        this.customers.add(i, customer);
+    }
+
+    private void removeCustomer(int i) {
+        Customer c = this.customers.remove(i);
         this.currentLoad -= c.getDemand();
+        this.setUpdated();
     }
 
     public boolean testDemandIncrement(double demand) {
@@ -100,6 +111,7 @@ public class Vehicle {
 
     public void clearRoute() {
         this.customers.clear();
+        this.currentLoad = 0.0;
         this.setUpdated();
     }
 

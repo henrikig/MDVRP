@@ -55,7 +55,7 @@ public class Depot {
 
             Vehicle currentVehicle = vehicles.get(vehicleNum);
 
-            if (!currentVehicle.insertCustomer(customer)) {
+            if (!currentVehicle.insertCustomerIfFeasible(customer)) {
                 if (!(vehicleNum >= vehicles.size() - 1)) {
                     vehicleNum++;
                 }
@@ -78,9 +78,8 @@ public class Depot {
 
             double lastDemand = lastCustomer.getDemand();
 
-            if (nextVehicle.testDemandIncrement(lastDemand) && nextVehicle.getCustomers().size() > 0) {
+            if (nextVehicle.testDemandIncrement(lastDemand) && nextVehicle.getNumCustomers() > 0) {
                 double deltaCost = 0.0;
-
                 int secondLastCustomerId = currentVehicle.getSecondLastCustomer().getId();
                 int lastCustomerId = lastCustomer.getId();
                 int firstCustomerId = nextVehicle.getFirstCustomer().getId();
