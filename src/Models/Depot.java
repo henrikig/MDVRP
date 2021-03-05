@@ -11,7 +11,6 @@ public class Depot implements Serializable {
     private final double maxLoad;
     private final int maxVehicles;
     private final MDVRP problem;
-    public String testField = "HELLO";
 
     public Depot(int id, ArrayList<Customer> customers, double maxLoad, int maxVehicles, MDVRP problem) {
         this.id = id;

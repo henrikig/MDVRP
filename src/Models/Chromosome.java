@@ -16,7 +16,6 @@ public class Chromosome implements Comparable<Chromosome>, Serializable {
     private final double maxLoad;
     private final int maxVehicles;
     private double fitness;
-    public String testField;
 
     public Chromosome(MDVRP problem) {
         this.numDepots = problem.getNumDepots();
@@ -24,7 +23,6 @@ public class Chromosome implements Comparable<Chromosome>, Serializable {
         this.maxLoad = problem.getMaxLoad();
         this.maxVehicles = problem.getMaxVehicles();
         this.clusterCustomers(problem);
-        this.testField = "Hello";
 
     }
 
