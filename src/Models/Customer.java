@@ -1,6 +1,8 @@
 package Models;
 
-public class Customer {
+import java.io.Serializable;
+
+public class Customer implements Serializable {
 
     private final int id;
     private final double demand;

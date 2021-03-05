@@ -3,10 +3,11 @@ package Models;
 import Utilities.Utils;
 import org.javatuples.Pair;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Map;
 
-public class MDVRP {
+public class MDVRP implements Serializable {
 
     private final Map<Integer, ArrayList<Double>> depots;
     private final Map<Integer, ArrayList<Double>> customers;

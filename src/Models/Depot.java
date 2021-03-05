@@ -1,8 +1,9 @@
 package Models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Depot {
+public class Depot implements Serializable {
 
     private final int id;
     private ArrayList<Customer> customers;

@@ -5,12 +5,11 @@ import Models.MDVRP;
 import Utilities.Parameters;
 import Utilities.ProblemInit;
 import com.google.gson.Gson;
+import org.apache.commons.lang.SerializationUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class GeneticAlgorithm {
 
@@ -69,16 +68,18 @@ public class GeneticAlgorithm {
             Chromosome p1 = parents.get(random.nextInt(parents.size()));
             Chromosome p2 = parents.get(random.nextInt(parents.size()));
 
+            Chromosome clone;
 
-            if (Math.random() < Parameters.BEST_PERCENTAGE) {
+            if (Math.random() < Parameters.KEEP_BEST) {
                 if (p1.compareTo(p2) > 0) {
-                    population.add(p1);
+                    clone = (Chromosome) SerializationUtils.clone(p1);
                 } else {
-                    population.add(p2);
+                    clone = (Chromosome) SerializationUtils.clone(p2);
                 }
             } else {
-                population.add(p1);
+                clone = (Chromosome) SerializationUtils.clone(p1);
             }
+            population.add(clone);
         }
     }
 
@@ -97,6 +98,5 @@ public class GeneticAlgorithm {
         MDVRP problem = ProblemInit.initializeProblem();
         GeneticAlgorithm ga = new GeneticAlgorithm(problem);
         ga.main();
-
     }
 }
