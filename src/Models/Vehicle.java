@@ -1,8 +1,9 @@
 package Models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Vehicle {
+public class Vehicle implements Serializable {
 
     private final double maxLoad;
     private double currentLoad;

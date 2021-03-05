@@ -2,39 +2,40 @@ package Models;
 
 import org.javatuples.Pair;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Chromosome implements Comparable<Chromosome> {
+public class Chromosome implements Comparable<Chromosome>, Serializable {
 
-    private MDVRP problem;
-    private ArrayList<Depot> depots = new ArrayList<>();
+    public ArrayList<Depot> depots = new ArrayList<>();
     private final int numDepots;
     private final int numCustomers;
     private final double maxLoad;
     private final int maxVehicles;
     private double fitness;
+    public String testField;
 
     public Chromosome(MDVRP problem) {
-        this.problem = problem;
         this.numDepots = problem.getNumDepots();
         this.numCustomers = problem.getNumCustomers();
         this.maxLoad = problem.getMaxLoad();
         this.maxVehicles = problem.getMaxVehicles();
-        this.clusterCustomers();
+        this.clusterCustomers(problem);
+        this.testField = "Hello";
 
     }
 
-    private void clusterCustomers() {
+    private void clusterCustomers(MDVRP problem) {
         Map<Integer, ArrayList<Customer>> customers = new HashMap<>();
 
         for (int customerId = 0; customerId < this.numCustomers; customerId++) {
 
-            ArrayList<Double> customer = this.problem.getCustomer(customerId);
+            ArrayList<Double> customer = problem.getCustomer(customerId);
             double customerDemand = customer.get(2);
-            Pair<Integer, Double> closestDepot = this.problem.getClosestDepot(customerId);
+            Pair<Integer, Double> closestDepot = problem.getClosestDepot(customerId);
 
             int closestId = closestDepot.getValue0();
             double closestDistance = closestDepot.getValue1();
@@ -59,7 +60,7 @@ public class Chromosome implements Comparable<Chromosome> {
             ArrayList<Customer> depotCustomers = customers.get(depotId);
             Collections.shuffle(depotCustomers);
 
-            Depot depot = new Depot(depotId, customers.get(depotId), this.maxLoad, this.maxVehicles, this.problem);
+            Depot depot = new Depot(depotId, customers.get(depotId), this.maxLoad, this.maxVehicles, problem);
             depots.add(depot);
         }
     }

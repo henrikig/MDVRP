@@ -1,8 +1,9 @@
 package Models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Depot {
+public class Depot implements Serializable {
 
     private final int id;
     private ArrayList<Customer> customers;
@@ -10,6 +11,7 @@ public class Depot {
     private final double maxLoad;
     private final int maxVehicles;
     private final MDVRP problem;
+    public String testField = "HELLO";
 
     public Depot(int id, ArrayList<Customer> customers, double maxLoad, int maxVehicles, MDVRP problem) {
         this.id = id;
