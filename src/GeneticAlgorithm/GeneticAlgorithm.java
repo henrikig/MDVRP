@@ -1,10 +1,8 @@
 package GeneticAlgorithm;
 
-import Models.Chromosome;
-import Models.MDVRP;
+import Models.*;
 import Utilities.Parameters;
 import Utilities.ProblemInit;
-import com.google.gson.Gson;
 import org.apache.commons.lang.SerializationUtils;
 
 import java.util.ArrayList;
@@ -16,9 +14,7 @@ public class GeneticAlgorithm {
     private MDVRP problem;
     private ArrayList<Chromosome> population;
     private ArrayList<Chromosome> parents;
-    private ArrayList<Chromosome> matingPool;
     private final Random random = new Random();
-    private final Gson gson = new Gson();
 
     public GeneticAlgorithm(MDVRP problem) {
         this.problem = problem;
@@ -28,13 +24,15 @@ public class GeneticAlgorithm {
 
     public void main() {
         initPopulation();
+        scheduleRoutes();
 
         for (int i = 0; i < Parameters.GENERATIONS; i++) {
-            scheduleRoutes();
             resetPopulation();
             elitism();
             tournamentSelection();
+            nextPopulation();
             getFitness();
+            bestFeasible();
         }
     }
 
@@ -63,6 +61,21 @@ public class GeneticAlgorithm {
         }
     }
 
+    public void feasibleElitism() {
+        Collections.sort(this.parents);
+        ArrayList<Chromosome> elites = new ArrayList<>();
+        int i = this.parents.size() - 1;
+        while (elites.size() < Parameters.ELITISM) {
+            Chromosome c = this.parents.get(i);
+            if (c.isFeasible()) {
+                System.out.println(true);
+                elites.add(c);
+            }
+            i--;
+        }
+        this.population.addAll(elites);
+    }
+
     public void tournamentSelection() {
         for (int i = 0; i < Parameters.POPULATION_SIZE - Parameters.ELITISM; i++) {
             Chromosome p1 = parents.get(random.nextInt(parents.size()));
@@ -70,7 +83,7 @@ public class GeneticAlgorithm {
 
             Chromosome clone;
 
-            if (Math.random() < Parameters.KEEP_BEST) {
+            if (Math.random() <= Parameters.KEEP_BEST) {
                 if (p1.compareTo(p2) > 0) {
                     clone = (Chromosome) SerializationUtils.clone(p1);
                 } else {
@@ -83,6 +96,42 @@ public class GeneticAlgorithm {
         }
     }
 
+    public void nextPopulation() {
+        for (int i = Parameters.ELITISM; i < Parameters.POPULATION_SIZE; i+=2) {
+            if(Math.random() <= Parameters.XOVER_PROB) {
+                Chromosome p1 = this.population.get(i);
+                Chromosome p2 = this.population.get(i + 1);
+
+                crossover(p1, p2);
+            }
+
+        }
+    }
+
+    public void crossover(Chromosome c1, Chromosome c2) {
+        int randomDepot = random.nextInt(this.problem.getNumDepots());
+
+        Depot depot1 = c1.getDepot(randomDepot);
+        Depot depot2 = c2.getDepot(randomDepot);
+
+        Vehicle v1 = depot1.getVehicle(random.nextInt(this.problem.getMaxVehicles()));
+        Vehicle v2 = depot2.getVehicle(random.nextInt(this.problem.getMaxVehicles()));
+
+        ArrayList<Customer> removeCustomers1 = (ArrayList<Customer>) SerializationUtils.clone(v1.getCustomers());
+        ArrayList<Customer> removeCustomers2 = (ArrayList<Customer>) SerializationUtils.clone(v2.getCustomers());
+
+        c1.removeCustomers(removeCustomers2);
+        c2.removeCustomers(removeCustomers1);
+
+        depot1.bestCostInsertions2(removeCustomers2);
+        depot2.bestCostInsertions2(removeCustomers1);
+
+    }
+
+    public void mutation() {
+
+    }
+
     public void getFitness() {
         double totalFitness = 0.0;
         double counter = 0;
@@ -92,6 +141,24 @@ public class GeneticAlgorithm {
         }
         System.out.println("AVG: " + totalFitness/counter);
         System.out.println("BEST: " + this.parents.get(this.parents.size()-1).getFitness());
+    }
+
+    public void bestFeasible() {
+        Collections.sort(this.parents);
+
+        boolean existsFeasible = false;
+
+        for (int i = this.parents.size() - 1; i >= 0; i--) {
+            Chromosome c = this.parents.get(i);
+            if (c.isFeasible()) {
+                System.out.println("BEST FEASIBLE: " + c.getFitness());
+                existsFeasible = true;
+                break;
+            }
+        }
+        if (!existsFeasible) {
+            this.parents.forEach(Chromosome::flatten);
+        }
     }
 
     public static void main(String[] args) {

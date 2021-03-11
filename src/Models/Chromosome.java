@@ -10,12 +10,11 @@ import java.util.Map;
 
 public class Chromosome implements Comparable<Chromosome>, Serializable {
 
-    public ArrayList<Depot> depots = new ArrayList<>();
+    private ArrayList<Depot> depots = new ArrayList<>();
     private final int numDepots;
     private final int numCustomers;
     private final double maxLoad;
     private final int maxVehicles;
-    private double fitness;
 
     public Chromosome(MDVRP problem) {
         this.numDepots = problem.getNumDepots();
@@ -24,6 +23,20 @@ public class Chromosome implements Comparable<Chromosome>, Serializable {
         this.maxVehicles = problem.getMaxVehicles();
         this.clusterCustomers(problem);
 
+    }
+
+    public Depot getDepot(int i) {
+        return this.depots.get(i);
+    }
+
+    public void removeCustomers(ArrayList<Customer> customers) {
+        for (Customer c : customers) {
+            for (Depot depot : this.depots) {
+                if(depot.removeCustomer(c)) {
+                    break;
+                }
+            }
+        }
     }
 
     private void clusterCustomers(MDVRP problem) {
@@ -70,8 +83,24 @@ public class Chromosome implements Comparable<Chromosome>, Serializable {
     }
 
     public double getFitness() {
-        this.fitness = depots.stream().mapToDouble(Depot::getRouteCosts).sum();
-        return fitness;
+        return depots.stream().mapToDouble(Depot::getRouteCosts).sum();
+    }
+
+    public void flatten() {
+        for (Depot depot : this.depots) {
+            depot.flattenCustomers();
+            depot.scheduleRoutes();
+            System.out.println("FLATTENED");
+        }
+    }
+
+    public boolean isFeasible() {
+        for (Depot depot : this.depots) {
+            if (!depot.isFeasible()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

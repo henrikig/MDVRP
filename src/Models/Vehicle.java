@@ -1,5 +1,7 @@
 package Models;
 
+import org.javatuples.Triplet;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -70,6 +72,80 @@ public class Vehicle implements Serializable {
         return false;
     }
 
+    public Triplet<Integer, Double, Boolean> bestInsertion(Customer c) {
+        Boolean feasible = this.testDemandIncrement(c.getDemand());
+        if (this.customers.size() == 0) {
+            double routeCost = 2 * this.problem.getD2CDistance(this.depot.getId(), c.getId());
+
+            return Triplet.with(0, routeCost, feasible);
+
+        } else {
+            int bestIndex = 0;
+            double bestDeltaCost = this.problem.getD2CDistance(this.depot.getId(), c.getId());
+            bestDeltaCost += this.problem.getC2CDistance(c.getId(), this.customers.get(0).getId());
+            bestDeltaCost -= this.problem.getD2CDistance(this.depot.getId(), this.customers.get(0).getId());
+
+            if (this.customers.size() > 1) {
+                for (int i = 1; i < this.customers.size(); i++) {
+                    double currDeltaCost = this.problem.getC2CDistance(this.customers.get(i - 1).getId(), c.getId());
+                    currDeltaCost += this.problem.getC2CDistance(c.getId(), this.customers.get(i).getId());
+                    currDeltaCost -= this.problem.getC2CDistance(this.customers.get(i - 1).getId(), this.customers.get(i).getId());
+
+                    if (currDeltaCost < bestDeltaCost) {
+                        bestDeltaCost = currDeltaCost;
+                        bestIndex = i;
+                    }
+                }
+                double lastDeltaCost = this.problem.getC2CDistance(this.customers.get(this.customers.size() - 1).getId(), c.getId());
+                lastDeltaCost += this.problem.getD2CDistance(this.depot.getId(), c.getId());
+                lastDeltaCost -= this.problem.getD2CDistance(this.depot.getId(), this.customers.get(this.customers.size() - 1).getId());
+
+                if (lastDeltaCost < bestDeltaCost) {
+                    bestDeltaCost = lastDeltaCost;
+                    bestIndex = this.customers.size();
+                }
+            }
+            return Triplet.with(bestIndex, bestDeltaCost, feasible);
+        }
+    }
+
+    public Triplet<Integer, Double, Boolean> bestInsertion2(Customer c) {
+        Boolean feasible = this.testDemandIncrement(c.getDemand());
+        if (this.customers.size() == 0) {
+            double routeCost = 2 * this.problem.getD2CDistance(this.depot.getId(), c.getId());
+
+            return Triplet.with(0, routeCost, feasible);
+
+        } else {
+            int bestIndex = 0;
+            double bestDeltaCost = this.problem.getD2CDistance(this.depot.getId(), c.getId());
+            bestDeltaCost += this.problem.getC2CDistance(c.getId(), this.customers.get(0).getId());
+            bestDeltaCost -= this.problem.getD2CDistance(this.depot.getId(), this.customers.get(0).getId());
+
+            if (this.customers.size() > 1) {
+                for (int i = 1; i < this.customers.size(); i++) {
+                    double currDeltaCost = this.problem.getC2CDistance(this.customers.get(i - 1).getId(), c.getId());
+                    currDeltaCost += this.problem.getC2CDistance(c.getId(), this.customers.get(i).getId());
+                    currDeltaCost -= this.problem.getC2CDistance(this.customers.get(i - 1).getId(), this.customers.get(i).getId());
+
+                    if (currDeltaCost < bestDeltaCost) {
+                        bestDeltaCost = currDeltaCost;
+                        bestIndex = i;
+                    }
+                }
+                double lastDeltaCost = this.problem.getC2CDistance(this.customers.get(this.customers.size() - 1).getId(), c.getId());
+                lastDeltaCost += this.problem.getD2CDistance(this.depot.getId(), c.getId());
+                lastDeltaCost -= this.problem.getD2CDistance(this.depot.getId(), this.customers.get(this.customers.size() - 1).getId());
+
+                if (lastDeltaCost < bestDeltaCost) {
+                    bestDeltaCost = lastDeltaCost;
+                    bestIndex = this.customers.size();
+                }
+            }
+            return Triplet.with(bestIndex, bestDeltaCost, feasible);
+        }
+    }
+
     public void forceInsertCustomer(Customer customer) {
         this.insertCustomer(customer);
     }
@@ -90,11 +166,26 @@ public class Vehicle implements Serializable {
         this.removeCustomer(this.customers.size() - 1);
     }
 
+    public boolean removeCustomer(Customer c) {
+        for (int i = 0; i < this.customers.size(); i++) {
+            if (this.customers.get(i).getId() == c.getId()) {
+                this.removeCustomer(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void insertCustomer(Customer customer) {
         this.insertCustomer(this.customers.size(), customer);
     }
 
     private void insertCustomer(int i, Customer customer) {
+        for (Customer cc : this.customers) {
+            if (cc.getId() == customer.getId()) {
+                System.out.println("HELLO");
+            }
+        }
         this.currentLoad += customer.getDemand();
         this.setUpdated();
         this.customers.add(i, customer);

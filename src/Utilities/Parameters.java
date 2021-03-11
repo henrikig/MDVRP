@@ -5,8 +5,11 @@ public class Parameters {
     public final static String PROBLEM_FOLDER = "./data/Testing Data/Data Files/";
     public final static String PROBLEM_FILE = "p01";
 
-    public final static int POPULATION_SIZE = 50;
-    public final static int GENERATIONS = 50;
+    public final static int POPULATION_SIZE = 400;
+    public final static int GENERATIONS = 200;
     public final static int ELITISM = 4;
     public final static double KEEP_BEST = 0.8;
+    public final static double MUTATION_PROB = 0.8;
+    public final static double XOVER_PROB = 0.8;
+    public final static double INSERT_BEST = 0.8;
 }
