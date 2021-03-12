@@ -79,40 +79,11 @@ public class Depot implements Serializable {
 
     public void bestCostInsertions(ArrayList<Customer> customers) {
         for (Customer c : customers) {
-            Triplet<Integer, Double, Boolean> bestCost = this.bestInsertCustomer(0, c);
-            Triplet<Integer, Double, Boolean> bestFeasible = Triplet.with(-1, Double.POSITIVE_INFINITY, false);
-
-            int bestVehicle = 0;
-            int bestFeasibleVehicle = 0;
-            for (int i = 1; i < this.vehicles.size(); i++) {
-                Triplet<Integer, Double, Boolean> currCost = this.bestInsertCustomer(i, c);
-                if (currCost.getValue1() < bestCost.getValue1() && currCost.getValue2()) {
-                    bestCost = currCost;
-                    bestVehicle = i;
-                } else if (currCost.getValue1() < bestFeasible.getValue1() && currCost.getValue2()) {
-                    bestFeasible = currCost;
-                    bestFeasibleVehicle = i;
-                }
-            }
-            if (bestFeasible.getValue0() >= 0) {
-                this.vehicles.get(bestFeasibleVehicle).insertCustomerByIndex(bestFeasible.getValue0(), c);
-
-            } else {
-                this.vehicles.get(bestVehicle).insertCustomerByIndex(bestCost.getValue0(), c);
-                boolean isFeasible = false;
-            }
-
-
-        }
-    }
-
-    public void bestCostInsertions2(ArrayList<Customer> customers) {
-        for (Customer c : customers) {
             ArrayList<Triplet<Integer, Integer, Double>> feasibleInsertion = new ArrayList<>();
             ArrayList<Triplet<Integer, Integer, Double>> allInsertions = new ArrayList<>();
 
             for (int i = 0; i < this.vehicles.size(); i++) {
-                Triplet<Integer, Double, Boolean> currCost = this.bestInsertCustomer2(i, c);
+                Triplet<Integer, Double, Boolean> currCost = this.bestInsertCustomer(i, c);
                 if (currCost.getValue2()) {
                     feasibleInsertion.add(Triplet.with(currCost.getValue0(), i, currCost.getValue1()));
                 }
@@ -120,14 +91,14 @@ public class Depot implements Serializable {
             }
 
             Triplet<Integer, Integer, Double> insertion;
-
-            if (Math.random() <= Parameters.INSERT_BEST) {
+            double a = Math.random();
+            if (a <= Parameters.INSERT_BEST) {
                 if (feasibleInsertion.size() == 0) {
                     allInsertions.sort(Comparator.comparing(Triplet::getValue2));
                     insertion = allInsertions.get(0);
                     this.vehicles.get(insertion.getValue1()).insertCustomerByIndex(insertion.getValue0(), c);
-                    this.flattenCustomers();
-                    this.scheduleRoutes();
+                    /*this.flattenCustomers();
+                    this.scheduleRoutes();*/
                     System.out.println(this.isFeasible());
                 } else {
                     feasibleInsertion.sort(Comparator.comparing(Triplet::getValue2));
@@ -148,10 +119,34 @@ public class Depot implements Serializable {
 
     }
 
-    public Triplet<Integer, Double, Boolean> bestInsertCustomer2(int i, Customer c) {
+    public void customerReroute() {
+        Vehicle vehicle = this.vehicles.get(random.nextInt(this.vehicles.size()));
 
-        return this.vehicles.get(i).bestInsertion2(c);
+        if (vehicle.getNumCustomers() == 0) {
+            return;
+        }
 
+        Customer c = vehicle.getCustomer(random.nextInt(vehicle.getNumCustomers()));
+
+        vehicle.removeCustomer(c);
+
+        int bestIndex = -1;
+        int bestVehicle = -1;
+        double bestCost = Double.POSITIVE_INFINITY;
+
+        for (int i = 0; i < this.vehicles.size(); i++) {
+            Triplet<Integer, Double, Boolean> currCost = this.bestInsertCustomer(i, c);
+
+            if (currCost.getValue2() && currCost.getValue1() < bestCost) {
+                bestIndex = currCost.getValue0();
+                bestVehicle = i;
+                bestCost = currCost.getValue1();
+            }
+        }
+
+        if (bestVehicle != -1) {
+            this.vehicles.get(bestVehicle).insertCustomerByIndex(bestIndex, c);
+        }
     }
 
     public boolean isFeasible() {

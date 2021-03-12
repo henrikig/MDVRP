@@ -90,7 +90,6 @@ public class Chromosome implements Comparable<Chromosome>, Serializable {
         for (Depot depot : this.depots) {
             depot.flattenCustomers();
             depot.scheduleRoutes();
-            System.out.println("FLATTENED");
         }
     }
 

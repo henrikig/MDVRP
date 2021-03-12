@@ -33,6 +33,12 @@ public class GeneticAlgorithm {
             nextPopulation();
             getFitness();
             bestFeasible();
+
+            if (i==50) {
+                Chromosome best = this.parents.get(this.parents.size()-1);
+                double fitness = best.getFitness();
+                System.out.println("GeneticAlg.java:40");
+            }
         }
     }
 
@@ -103,8 +109,16 @@ public class GeneticAlgorithm {
                 Chromosome p2 = this.population.get(i + 1);
 
                 crossover(p1, p2);
-            }
 
+
+                if (Math.random() <= Parameters.MUTATION_PROB) {
+                    this.mutation(p1);
+                }
+                if (Math.random() <= Parameters.MUTATION_PROB) {
+                    this.mutation(p2);
+                }
+
+            }
         }
     }
 
@@ -123,12 +137,23 @@ public class GeneticAlgorithm {
         c1.removeCustomers(removeCustomers2);
         c2.removeCustomers(removeCustomers1);
 
-        depot1.bestCostInsertions2(removeCustomers2);
-        depot2.bestCostInsertions2(removeCustomers1);
+        depot1.bestCostInsertions(removeCustomers2);
+        depot2.bestCostInsertions(removeCustomers1);
 
     }
 
-    public void mutation() {
+    public void mutation(Chromosome chromosome) {
+
+        this.customerReroute(chromosome);
+    }
+
+    public void customerReroute(Chromosome chromosome) {
+        int randomDepot = random.nextInt(this.problem.getNumDepots());
+
+        Depot depot = chromosome.getDepot(randomDepot);
+
+        depot.customerReroute();
+
 
     }
 
@@ -156,9 +181,10 @@ public class GeneticAlgorithm {
                 break;
             }
         }
-        if (!existsFeasible) {
+        /*if (!existsFeasible) {
             this.parents.forEach(Chromosome::flatten);
-        }
+            System.out.println("FLATTENED");
+        }*/
     }
 
     public static void main(String[] args) {
