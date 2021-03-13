@@ -3,8 +3,9 @@ package Utilities;
 public class Parameters {
 
     public final static String PROBLEM_FOLDER = "./data/Testing Data/Data Files/";
-    public final static String SOLUTIONS_FOLDER = "./data/Testing Data/My Solutions/";
-    public final static String PROBLEM_FILE = "p03";
+    public final static String SOLUTIONS_FOLDER = "./data/Solution files/";
+    public final static String PLOT_FILE = "./plots/mdvrp_plot.py";
+    public final static String PROBLEM_FILE = "p23";
 
     public final static int POPULATION_SIZE = 400;
     public final static int GENERATIONS = 200;
@@ -16,6 +17,5 @@ public class Parameters {
     public final static double INSERT_BEST = 0.8;
 
     public final static double PENALTY_DEMAND = 10;
-
 
 }

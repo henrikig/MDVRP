@@ -1,14 +1,11 @@
 package GeneticAlgorithm;
 
-import Models.Chromosome;
-import Models.Customer;
-import Models.Depot;
 import Models.MDVRP;
+import Utilities.Parameters;
 import Utilities.ProblemInit;
 import Utilities.Utils;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public class Main {
 
@@ -17,5 +14,14 @@ public class Main {
         GeneticAlgorithm ga = new GeneticAlgorithm(problem);
         String solution = ga.main();
         Utils.writeSolution(solution);
+
+        String[] cmd = {
+                "python3",
+                Parameters.PLOT_FILE,
+                Parameters.PROBLEM_FILE
+        };
+
+        Runtime.getRuntime().exec(cmd);
+
     }
 }
