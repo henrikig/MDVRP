@@ -1,4 +1,3 @@
-from parameters import PROBLEM_FOLDER, PROBLEM_FILE
 from collections import namedtuple
 
 Customer = namedtuple("Customer", ["x", "y"])
@@ -27,6 +26,3 @@ def read_problem(filename):
         depots[depot_line[0] - num_customers] = Depot(x=depot_line[1], y=depot_line[2])
 
     return customers, depots
-
-
-read_problem(PROBLEM_FOLDER + PROBLEM_FILE)

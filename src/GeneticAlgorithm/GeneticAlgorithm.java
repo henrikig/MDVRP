@@ -63,21 +63,6 @@ public class GeneticAlgorithm {
         }
     }
 
-    public void feasibleElitism() {
-        Collections.sort(this.parents);
-        ArrayList<Chromosome> elites = new ArrayList<>();
-        int i = this.parents.size() - 1;
-        while (elites.size() < Parameters.ELITISM) {
-            Chromosome c = this.parents.get(i);
-            if (c.isFeasible()) {
-                System.out.println(true);
-                elites.add(c);
-            }
-            i--;
-        }
-        this.population.addAll(elites);
-    }
-
     public void tournamentSelection() {
         for (int i = 0; i < Parameters.POPULATION_SIZE - Parameters.ELITISM; i++) {
             Chromosome p1 = parents.get(random.nextInt(parents.size()));

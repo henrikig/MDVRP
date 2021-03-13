@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import sys
 from problem_reader import read_problem
 from solution_reader import read_solution
-from parameters import PROBLEM_FOLDER, PROBLEM_FILE, SOLUTIONS_FOLDER, SOLUTION_FILE
+from parameters import PROBLEM_FOLDER, SOLUTIONS_FOLDER
 
 
 def plot(prob="p01"):
@@ -39,7 +39,7 @@ def plot(prob="p01"):
                  [customers.get(route.customers[-1]).y, depots.get(depot).y],
                  c="g", alpha=0.8)
 
-    plt.title(PROBLEM_FILE + ": " + str(cost))
+    plt.title(prob + ": " + str(cost))
     plt.show()
 
 

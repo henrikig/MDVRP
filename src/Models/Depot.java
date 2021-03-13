@@ -73,15 +73,11 @@ public class Depot implements Serializable {
             }
 
             Triplet<Integer, Integer, Double> insertion;
-            double a = Math.random();
-            if (a <= Parameters.INSERT_BEST) {
+            if (Math.random() <= Parameters.INSERT_BEST) {
                 if (feasibleInsertion.size() == 0) {
                     allInsertions.sort(Comparator.comparing(Triplet::getValue2));
                     insertion = allInsertions.get(0);
                     this.vehicles.get(insertion.getValue1()).insertCustomerByIndex(insertion.getValue0(), c);
-                    /*this.flattenCustomers();
-                    this.scheduleRoutes();*/
-                    System.out.println(this.isFeasible());
                 } else {
                     feasibleInsertion.sort(Comparator.comparing(Triplet::getValue2));
                     insertion = feasibleInsertion.get(0);

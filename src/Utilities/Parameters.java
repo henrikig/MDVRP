@@ -5,7 +5,7 @@ public class Parameters {
     public final static String PROBLEM_FOLDER = "./data/Testing Data/Data Files/";
     public final static String SOLUTIONS_FOLDER = "./data/Solution files/";
     public final static String PLOT_FILE = "./plots/mdvrp_plot.py";
-    public final static String PROBLEM_FILE = "p23";
+    public final static String PROBLEM_FILE = "p08";
 
     public final static int POPULATION_SIZE = 400;
     public final static int GENERATIONS = 200;

@@ -1,4 +1,3 @@
-from parameters import SOLUTIONS_FOLDER, SOLUTION_FILE
 from collections import namedtuple
 
 
@@ -21,6 +20,3 @@ def read_solution(filename):
         routes.append(route)
 
     return routes, solution_cost
-
-
-read_solution(SOLUTIONS_FOLDER + SOLUTION_FILE)

@@ -118,10 +118,6 @@ public class Vehicle implements Serializable {
         this.insertCustomer(0, customer);
     }
 
-    public void removeCustomerByIndex(int i) {
-        this.removeCustomer(i);
-    }
-
     public void removeLastCustomer() {
         this.removeCustomer(this.customers.size() - 1);
     }
