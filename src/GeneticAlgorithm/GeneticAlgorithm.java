@@ -2,7 +2,6 @@ package GeneticAlgorithm;
 
 import Models.*;
 import Utilities.Parameters;
-import Utilities.ProblemInit;
 import org.apache.commons.lang.SerializationUtils;
 
 import java.util.ArrayList;
@@ -15,6 +14,7 @@ public class GeneticAlgorithm {
     private ArrayList<Chromosome> population;
     private ArrayList<Chromosome> parents;
     private final Random random = new Random();
+    private Chromosome bestSolution;
 
     public GeneticAlgorithm(MDVRP problem) {
         this.problem = problem;
@@ -22,7 +22,7 @@ public class GeneticAlgorithm {
         this.parents = new ArrayList<>(Parameters.POPULATION_SIZE);
     }
 
-    public void main() {
+    public String main() {
         initPopulation();
         scheduleRoutes();
 
@@ -33,13 +33,9 @@ public class GeneticAlgorithm {
             nextPopulation();
             getFitness();
             bestFeasible();
-
-            if (i==50) {
-                Chromosome best = this.parents.get(this.parents.size()-1);
-                double fitness = best.getFitness();
-                System.out.println("GeneticAlg.java:40");
-            }
         }
+
+        return createSolution();
     }
 
     public void initPopulation() {
@@ -171,25 +167,47 @@ public class GeneticAlgorithm {
     public void bestFeasible() {
         Collections.sort(this.parents);
 
-        boolean existsFeasible = false;
-
         for (int i = this.parents.size() - 1; i >= 0; i--) {
             Chromosome c = this.parents.get(i);
             if (c.isFeasible()) {
                 System.out.println("BEST FEASIBLE: " + c.getFitness());
-                existsFeasible = true;
-                break;
+
+                if (bestSolution != null) {
+                    if (c.getFitness() < bestSolution.getFitness()) {
+                        bestSolution = c;
+                    }
+                } else {
+                    bestSolution = c;
+                }
+
+                return;
             }
         }
-        /*if (!existsFeasible) {
-            this.parents.forEach(Chromosome::flatten);
-            System.out.println("FLATTENED");
-        }*/
     }
 
-    public static void main(String[] args) {
-        MDVRP problem = ProblemInit.initializeProblem();
-        GeneticAlgorithm ga = new GeneticAlgorithm(problem);
-        ga.main();
+    public String createSolution() {
+        StringBuilder solution = new StringBuilder(Math.round(bestSolution.getFitness() * 100.0) / 100.0 + "\n");
+
+        for (Depot depot : bestSolution.getDepots()) {
+            int vehicleNum = 1;
+
+            for (Vehicle vehicle : depot.getVehicles()) {
+                if (vehicle.getCustomers().size() > 0) {
+                    solution.append(depot.getId() + 1).append("\t");
+                    solution.append(vehicleNum).append("\t");
+                    solution.append(Math.round(vehicle.getRouteCost() * 100.0) / 100.0).append("\t");
+                    solution.append(vehicle.getCurrentLoad()).append("\t");
+                    solution.append(0).append(" ");
+
+                    for (Customer customer : vehicle.getCustomers()) {
+                        solution.append(customer.getId() + 1).append(" ");
+                    }
+
+                    solution.append(0).append("\n");
+                }
+                vehicleNum++;
+            }
+        }
+        return solution.toString();
     }
 }

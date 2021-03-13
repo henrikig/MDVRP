@@ -38,16 +38,8 @@ public class Depot implements Serializable {
         return id;
     }
 
-    public ArrayList<Customer> getCustomers() {
-        return customers;
-    }
-
-    public double getMaxLoad() {
-        return maxLoad;
-    }
-
     public double getRouteCosts() {
-        return vehicles.stream().mapToDouble(Vehicle::getRouteCost).sum();
+        return vehicles.stream().mapToDouble(Vehicle::getFitness).sum();
     }
 
     public Vehicle getVehicle(int i) {
@@ -56,16 +48,6 @@ public class Depot implements Serializable {
 
     public ArrayList<Vehicle> getVehicles() {
         return this.vehicles;
-    }
-
-    public void flattenCustomers() {
-        ArrayList<ArrayList<Customer>> currentCustomers = new ArrayList<>();
-
-        for (Vehicle vehicle : this.getVehicles()) {
-            currentCustomers.add(vehicle.getCustomers());
-        }
-        this.customers.clear();
-        currentCustomers.forEach(this.customers::addAll);
     }
 
     public boolean removeCustomer(Customer c) {

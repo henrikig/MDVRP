@@ -6,14 +6,10 @@ public class Customer implements Serializable {
 
     private final int id;
     private final double demand;
-    private int depotId;
-    private double depotDistance;
 
-    public Customer(int id, double demand, int depotId, double depotDistance) {
+    public Customer(int id, double demand) {
         this.id = id;
         this.demand = demand;
-        this.depotId = depotId;
-        this.depotDistance = depotDistance;
     }
 
     public int getId() {
@@ -24,11 +20,4 @@ public class Customer implements Serializable {
         return demand;
     }
 
-    public int getDepotId() {
-        return depotId;
-    }
-
-    public double getDepotDistance() {
-        return depotDistance;
-    }
 }

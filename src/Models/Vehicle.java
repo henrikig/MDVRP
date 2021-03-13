@@ -25,10 +25,6 @@ public class Vehicle implements Serializable {
         this.currentLoad = 0.0;
     }
 
-    public double getMaxLoad() {
-        return maxLoad;
-    }
-
     public double getCurrentLoad() {
         return currentLoad;
     }
@@ -171,12 +167,16 @@ public class Vehicle implements Serializable {
         this.setUpdated();
     }
 
+    public double getFitness() {
+        return this.getRouteCost() + this.getPenalty();
+    }
+
     public double getRouteCost() {
         if (this.updated) {
             updateRouteCost();
             this.updated = false;
         }
-        return this.routeCost + this.getPenalty();
+        return this.routeCost;
     }
 
     public double getPenalty() {

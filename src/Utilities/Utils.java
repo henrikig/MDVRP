@@ -1,5 +1,9 @@
 package Utilities;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import static java.lang.Math.sqrt;
 import static java.lang.Math.pow;
 
@@ -12,5 +16,13 @@ public class Utils {
 
         return sqrt(pow(xDist, 2) + pow(yDist, 2));
 
+    }
+
+    public static void writeSolution(String solution) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(Parameters.SOLUTIONS_FOLDER + Parameters.PROBLEM_FILE + ".res"));
+
+        writer.write(solution);
+
+        writer.close();
     }
 }

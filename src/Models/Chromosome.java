@@ -29,6 +29,10 @@ public class Chromosome implements Comparable<Chromosome>, Serializable {
         return this.depots.get(i);
     }
 
+    public ArrayList<Depot> getDepots() {
+        return depots;
+    }
+
     public void removeCustomers(ArrayList<Customer> customers) {
         for (Customer c : customers) {
             for (Depot depot : this.depots) {
@@ -49,9 +53,8 @@ public class Chromosome implements Comparable<Chromosome>, Serializable {
             Pair<Integer, Double> closestDepot = problem.getClosestDepot(customerId);
 
             int closestId = closestDepot.getValue0();
-            double closestDistance = closestDepot.getValue1();
 
-            Customer c = new Customer(customerId, customerDemand, closestId, closestDistance);
+            Customer c = new Customer(customerId, customerDemand);
 
             if (customers.containsKey(closestId)) {
 
@@ -84,13 +87,6 @@ public class Chromosome implements Comparable<Chromosome>, Serializable {
 
     public double getFitness() {
         return depots.stream().mapToDouble(Depot::getRouteCosts).sum();
-    }
-
-    public void flatten() {
-        for (Depot depot : this.depots) {
-            depot.flattenCustomers();
-            depot.scheduleRoutes();
-        }
     }
 
     public boolean isFeasible() {
