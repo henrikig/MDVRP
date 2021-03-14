@@ -14,8 +14,9 @@ public class Depot implements Serializable {
     private ArrayList<Vehicle> vehicles;
     private final double maxLoad;
     private final int maxVehicles;
-    private final MDVRP problem;
     private final Random random = new Random();
+    private boolean updated;
+    private double fitness;
 
     public Depot(int id, ArrayList<Customer> customers, double maxLoad, int maxVehicles, MDVRP problem) {
         this.id = id;
@@ -23,14 +24,14 @@ public class Depot implements Serializable {
         this.vehicles = new ArrayList<>();
         this.maxLoad = maxLoad;
         this.maxVehicles = maxVehicles;
-        this.problem = problem;
+        this.updated = true;
 
-        initVehicles();
+        initVehicles(problem);
     }
 
-    private void initVehicles() {
+    private void initVehicles(MDVRP problem) {
         for (int i = 0; i < maxVehicles; i++) {
-            this.vehicles.add(new Vehicle(this.maxLoad, this.problem, this));
+            this.vehicles.add(new Vehicle(this.maxLoad, this));
         }
     }
 
@@ -38,8 +39,16 @@ public class Depot implements Serializable {
         return id;
     }
 
-    public double getRouteCosts() {
-        return vehicles.stream().mapToDouble(Vehicle::getFitness).sum();
+    public double getRouteCosts(MDVRP problem) {
+        if (this.updated) {
+            this.fitness = vehicles.stream().mapToDouble(v -> v.getFitness(problem)).sum();
+            this.updated = false;
+        }
+        return this.fitness;
+    }
+
+    public void setUpdated() {
+        this.updated = true;
     }
 
     public Vehicle getVehicle(int i) {
@@ -59,13 +68,13 @@ public class Depot implements Serializable {
         return false;
     }
 
-    public void bestCostInsertions(ArrayList<Customer> customers) {
+    public void bestCostInsertions(ArrayList<Customer> customers, MDVRP problem) {
         for (Customer c : customers) {
             ArrayList<Triplet<Integer, Integer, Double>> feasibleInsertion = new ArrayList<>();
             ArrayList<Triplet<Integer, Integer, Double>> allInsertions = new ArrayList<>();
 
             for (int i = 0; i < this.vehicles.size(); i++) {
-                Triplet<Integer, Double, Boolean> currCost = this.bestInsertCustomer(i, c);
+                Triplet<Integer, Double, Boolean> currCost = this.bestInsertCustomer(i, c, problem);
                 if (currCost.getValue2()) {
                     feasibleInsertion.add(Triplet.with(currCost.getValue0(), i, currCost.getValue1()));
                 }
@@ -91,13 +100,13 @@ public class Depot implements Serializable {
         }
     }
 
-    public Triplet<Integer, Double, Boolean> bestInsertCustomer(int i, Customer c) {
+    public Triplet<Integer, Double, Boolean> bestInsertCustomer(int i, Customer c, MDVRP problem) {
 
-        return this.vehicles.get(i).bestInsertion(c);
+        return this.vehicles.get(i).bestInsertion(c, problem);
 
     }
 
-    public void customerReroute() {
+    public void customerReroute(MDVRP problem) {
         Vehicle vehicle = this.vehicles.get(random.nextInt(this.vehicles.size()));
 
         if (vehicle.getNumCustomers() == 0) {
@@ -113,7 +122,7 @@ public class Depot implements Serializable {
         double bestCost = Double.POSITIVE_INFINITY;
 
         for (int i = 0; i < this.vehicles.size(); i++) {
-            Triplet<Integer, Double, Boolean> currCost = this.bestInsertCustomer(i, c);
+            Triplet<Integer, Double, Boolean> currCost = this.bestInsertCustomer(i, c, problem);
 
             if (currCost.getValue2() && currCost.getValue1() < bestCost) {
                 bestIndex = currCost.getValue0();
@@ -127,6 +136,28 @@ public class Depot implements Serializable {
         }
     }
 
+    public void swap() {
+        Vehicle v1 = this.vehicles.get(random.nextInt(this.vehicles.size()));
+        Vehicle v2 = this.vehicles.get(random.nextInt(this.vehicles.size()));
+
+        if (v1.getNumCustomers() > 0 && v2.getNumCustomers() > 0) {
+            Customer c1 = v1.getCustomer(random.nextInt(v1.getNumCustomers()));
+            Customer c2 = v2.getCustomer(random.nextInt(v2.getNumCustomers()));
+
+            v1.setCustomer(c2, c1);
+            v2.setCustomer(c1, c2);
+        }
+
+    }
+
+    public void reverse() {
+        Vehicle vehicle = this.vehicles.get(random.nextInt(this.vehicles.size()));
+
+        if (vehicle.getNumCustomers() > 0) {
+            vehicle.reverse();
+        }
+    }
+
     public boolean isFeasible() {
         for (Vehicle vehicle : this.vehicles) {
             if (!vehicle.getFeasibility()) {
@@ -136,7 +167,7 @@ public class Depot implements Serializable {
         return true;
     }
 
-    public void scheduleRoutes() {
+    public void scheduleRoutes(MDVRP problem) {
         for (Vehicle vehicle : vehicles) {
             vehicle.clearRoute();
         }
@@ -177,13 +208,13 @@ public class Depot implements Serializable {
                 int firstCustomerId = nextVehicle.getFirstCustomer().getId();
 
                 // Remove second last to last customer
-                deltaCost -= this.problem.getC2CDistance(secondLastCustomerId, lastCustomerId);
+                deltaCost -= problem.getC2CDistance(secondLastCustomerId, lastCustomerId);
                 // Add second last to depot
-                deltaCost += this.problem.getD2CDistance(this.getId(), secondLastCustomerId);
+                deltaCost += problem.getD2CDistance(this.getId(), secondLastCustomerId);
                 // Remove depot to first customer
-                deltaCost -= this.problem.getD2CDistance(this.getId(), firstCustomerId);
+                deltaCost -= problem.getD2CDistance(this.getId(), firstCustomerId);
                 // Add last customer from route i to first customer route i+1
-                deltaCost += this.problem.getC2CDistance(lastCustomerId, firstCustomerId);
+                deltaCost += problem.getC2CDistance(lastCustomerId, firstCustomerId);
 
                 if (deltaCost < 0) {
                     currentVehicle.removeLastCustomer();

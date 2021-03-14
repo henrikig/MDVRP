@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import random
 from problem_reader import read_problem
 from solution_reader import read_solution
 from parameters import PROBLEM_FOLDER, SOLUTIONS_FOLDER
@@ -23,9 +24,12 @@ def plot(prob="p01"):
     for route in routes:
         depot = route.depot
 
+        color = random.choice(["#e57373", "#f06292", "#ba68c8", "#b39ddb", "#9fa8da",
+                               "#90caf9", "#80cbc4", "#a5d6a7", "#fff176", "#ffb74d"])
+
         plt.plot([depots.get(depot).x, customers.get(route.customers[0]).x],
                  [depots.get(depot).y, customers.get(route.customers[0]).y],
-                 c="g", alpha=0.8)
+                 c=color, alpha=1)
 
         for i in range(len(route.customers) - 1):
             customer1 = customers.get(route.customers[i])
@@ -33,11 +37,11 @@ def plot(prob="p01"):
 
             plt.plot([customer1.x, customer2.x],
                      [customer1.y, customer2.y],
-                     c="g", alpha=0.8)
+                     c=color, alpha=1)
 
         plt.plot([customers.get(route.customers[-1]).x, depots.get(depot).x],
                  [customers.get(route.customers[-1]).y, depots.get(depot).y],
-                 c="g", alpha=0.8)
+                 c=color, alpha=1)
 
     plt.title(prob + ": " + str(cost))
     plt.show()
@@ -45,8 +49,8 @@ def plot(prob="p01"):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Please specify problem in arguments")
-        print("Plotting default problem p01")
+        print("Please specify problem in arguments.")
+        print("Plotting default problem p01.")
         problem = "p01"
     else:
         problem = sys.argv[1]

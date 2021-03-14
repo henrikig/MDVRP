@@ -24,15 +24,31 @@ public class GeneticAlgorithm {
 
     public String main() {
         initPopulation();
-        scheduleRoutes();
+        scheduleRoutes(this.problem);
+
+        bestSolution = this.population.get(0);
+
+        long start = System.nanoTime();
 
         for (int i = 0; i < Parameters.GENERATIONS; i++) {
-            resetPopulation();
-            elitism();
-            tournamentSelection();
-            nextPopulation();
-            getFitness();
-            bestFeasible();
+            long elapsedTime = (System.nanoTime() - start)/1000000000;
+
+            if (elapsedTime < 300 && bestSolution.getFitness(this.problem) > Parameters.FITNESS_TARGET) {
+                resetPopulation();
+
+                elitism();
+
+                tournamentSelection();
+
+                nextPopulation();
+
+                getFitness();
+
+                bestFeasible();
+            } else {
+                break;
+            }
+
         }
 
         return createSolution();
@@ -44,9 +60,9 @@ public class GeneticAlgorithm {
         }
     }
 
-    public void scheduleRoutes() {
+    public void scheduleRoutes(MDVRP problem) {
         for (Chromosome chromosome : population) {
-            chromosome.scheduleRoutes();
+            chromosome.scheduleRoutes(problem);
         }
     }
 
@@ -57,7 +73,8 @@ public class GeneticAlgorithm {
     }
 
     public void elitism() {
-        Collections.sort(this.parents);
+        this.parents.sort((c1, c2) -> Chromosome.compare(c1, c2, this.problem));
+
         for (int i = this.parents.size() - 1; i >= Parameters.POPULATION_SIZE - Parameters.ELITISM; i--) {
             this.population.add(parents.get(i));
         }
@@ -71,13 +88,17 @@ public class GeneticAlgorithm {
             Chromosome clone;
 
             if (Math.random() <= Parameters.KEEP_BEST) {
-                if (p1.compareTo(p2) > 0) {
+                if (Chromosome.compare(p1, p2, this.problem) > 0) {
                     clone = (Chromosome) SerializationUtils.clone(p1);
                 } else {
                     clone = (Chromosome) SerializationUtils.clone(p2);
                 }
             } else {
-                clone = (Chromosome) SerializationUtils.clone(p1);
+                if (random.nextInt(2) == 1) {
+                    clone = (Chromosome) SerializationUtils.clone(p1);
+                } else {
+                    clone = (Chromosome) SerializationUtils.clone(p2);
+                }
             }
             population.add(clone);
         }
@@ -101,6 +122,7 @@ public class GeneticAlgorithm {
 
             }
         }
+        Collections.shuffle(this.population);
     }
 
     public void crossover(Chromosome c1, Chromosome c2) {
@@ -118,14 +140,27 @@ public class GeneticAlgorithm {
         c1.removeCustomers(removeCustomers2);
         c2.removeCustomers(removeCustomers1);
 
-        depot1.bestCostInsertions(removeCustomers2);
-        depot2.bestCostInsertions(removeCustomers1);
+        depot1.bestCostInsertions(removeCustomers2, this.problem);
+        depot2.bestCostInsertions(removeCustomers1, this.problem);
 
     }
 
     public void mutation(Chromosome chromosome) {
+        double mutationType = Math.random();
 
-        this.customerReroute(chromosome);
+        if (mutationType < 0.4) {
+
+            this.customerReroute(chromosome);
+
+        } else if (mutationType < 0.8) {
+
+            this.reverse(chromosome);
+
+        } else {
+
+            this.swap(chromosome);
+
+        }
     }
 
     public void customerReroute(Chromosome chromosome) {
@@ -133,35 +168,48 @@ public class GeneticAlgorithm {
 
         Depot depot = chromosome.getDepot(randomDepot);
 
-        depot.customerReroute();
+        depot.customerReroute(this.problem);
 
+    }
 
+    public void swap(Chromosome chromosome) {
+        int depotNum = random.nextInt(this.problem.getNumDepots());
+
+        Depot depot = chromosome.getDepot(depotNum);
+
+        depot.swap();
+
+    }
+
+    public void reverse(Chromosome chromosome) {
+        int depotNum = random.nextInt(this.problem.getNumDepots());
+
+        Depot depot = chromosome.getDepot(depotNum);
+
+        depot.reverse();
     }
 
     public void getFitness() {
         double totalFitness = 0.0;
         double counter = 0;
         for (Chromosome c : population) {
-            totalFitness += c.getFitness();
+            totalFitness += c.getFitness(this.problem);
             counter++;
         }
         System.out.println("AVG: " + totalFitness/counter);
-        System.out.println("BEST: " + this.parents.get(this.parents.size()-1).getFitness());
+        System.out.println("BEST: " + this.parents.get(this.parents.size()-1).getFitness(this.problem));
     }
 
     public void bestFeasible() {
-        Collections.sort(this.parents);
+        this.parents.sort((c1, c2) -> Chromosome.compare(c1, c2, this.problem));
 
         for (int i = this.parents.size() - 1; i >= 0; i--) {
             Chromosome c = this.parents.get(i);
-            if (c.isFeasible()) {
-                System.out.println("BEST FEASIBLE: " + c.getFitness());
 
-                if (bestSolution != null) {
-                    if (c.getFitness() < bestSolution.getFitness()) {
-                        bestSolution = c;
-                    }
-                } else {
+            if (c.isFeasible()) {
+                System.out.println("BEST FEASIBLE: " + c.getFitness(this.problem));
+
+                if (c.getFitness(this.problem) < bestSolution.getFitness(this.problem)) {
                     bestSolution = c;
                 }
 
@@ -171,7 +219,7 @@ public class GeneticAlgorithm {
     }
 
     public String createSolution() {
-        StringBuilder solution = new StringBuilder(Math.round(bestSolution.getFitness() * 100.0) / 100.0 + "\n");
+        StringBuilder solution = new StringBuilder(Math.round(bestSolution.getFitness(this.problem) * 100.0) / 100.0 + "\n");
 
         for (Depot depot : bestSolution.getDepots()) {
             int vehicleNum = 1;
@@ -179,9 +227,13 @@ public class GeneticAlgorithm {
             for (Vehicle vehicle : depot.getVehicles()) {
                 if (vehicle.getCustomers().size() > 0) {
                     solution.append(depot.getId() + 1).append("\t");
+
                     solution.append(vehicleNum).append("\t");
-                    solution.append(Math.round(vehicle.getRouteCost() * 100.0) / 100.0).append("\t");
+
+                    solution.append(Math.round(vehicle.getRouteCost(this.problem) * 100.0) / 100.0).append("\t");
+
                     solution.append(vehicle.getCurrentLoad()).append("\t");
+
                     solution.append(0).append(" ");
 
                     for (Customer customer : vehicle.getCustomers()) {

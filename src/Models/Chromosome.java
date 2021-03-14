@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Chromosome implements Comparable<Chromosome>, Serializable {
+public class Chromosome implements Serializable {
 
     private ArrayList<Depot> depots = new ArrayList<>();
     private final int numDepots;
@@ -22,7 +22,6 @@ public class Chromosome implements Comparable<Chromosome>, Serializable {
         this.maxLoad = problem.getMaxLoad();
         this.maxVehicles = problem.getMaxVehicles();
         this.clusterCustomers(problem);
-
     }
 
     public Depot getDepot(int i) {
@@ -79,14 +78,14 @@ public class Chromosome implements Comparable<Chromosome>, Serializable {
         }
     }
 
-    public void scheduleRoutes() {
+    public void scheduleRoutes(MDVRP problem) {
         for (Depot depot : depots) {
-            depot.scheduleRoutes();
+            depot.scheduleRoutes(problem);
         }
     }
 
-    public double getFitness() {
-        return depots.stream().mapToDouble(Depot::getRouteCosts).sum();
+    public double getFitness(MDVRP problem) {
+        return depots.stream().mapToDouble(d -> d.getRouteCosts(problem)).sum();
     }
 
     public boolean isFeasible() {
@@ -98,11 +97,10 @@ public class Chromosome implements Comparable<Chromosome>, Serializable {
         return true;
     }
 
-    @Override
-    public int compareTo(Chromosome o) {
-        if (this.getFitness() == o.getFitness()) {
+    public static int compare(Chromosome c1, Chromosome c2, MDVRP problem) {
+        if (c1.getFitness(problem) == c2.getFitness(problem)) {
             return 0;
-        } else if (this.getFitness() > o.getFitness()) {
+        } else if (c1.getFitness(problem) > c2.getFitness(problem)) {
             return -1;
         }
         return 1;

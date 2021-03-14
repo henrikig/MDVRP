@@ -5,20 +5,20 @@ import org.javatuples.Triplet;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Vehicle implements Serializable {
 
     private final double maxLoad;
     private double currentLoad;
     private ArrayList<Customer> customers;
-    private final MDVRP problem;
     private final Depot depot;
+    private final Random random = new Random();
     private double routeCost;
     private boolean updated;
 
-    public Vehicle(double maxLoad, MDVRP problem, Depot depot) {
+    public Vehicle(double maxLoad, Depot depot) {
         this.maxLoad = maxLoad;
-        this.problem = problem;
         this.depot = depot;
         this.updated = true;
         this.customers = new ArrayList<>();
@@ -69,33 +69,33 @@ public class Vehicle implements Serializable {
         return false;
     }
 
-    public Triplet<Integer, Double, Boolean> bestInsertion(Customer c) {
+    public Triplet<Integer, Double, Boolean> bestInsertion(Customer c, MDVRP problem) {
         Boolean feasible = this.testDemandIncrement(c.getDemand());
         if (this.customers.size() == 0) {
-            double routeCost = 2 * this.problem.getD2CDistance(this.depot.getId(), c.getId());
+            double routeCost = 2 * problem.getD2CDistance(this.depot.getId(), c.getId());
 
             return Triplet.with(0, routeCost, feasible);
 
         } else {
             int bestIndex = 0;
-            double bestDeltaCost = this.problem.getD2CDistance(this.depot.getId(), c.getId());
-            bestDeltaCost += this.problem.getC2CDistance(c.getId(), this.customers.get(0).getId());
-            bestDeltaCost -= this.problem.getD2CDistance(this.depot.getId(), this.customers.get(0).getId());
+            double bestDeltaCost = problem.getD2CDistance(this.depot.getId(), c.getId());
+            bestDeltaCost += problem.getC2CDistance(c.getId(), this.customers.get(0).getId());
+            bestDeltaCost -= problem.getD2CDistance(this.depot.getId(), this.customers.get(0).getId());
 
             if (this.customers.size() > 1) {
                 for (int i = 1; i < this.customers.size(); i++) {
-                    double currDeltaCost = this.problem.getC2CDistance(this.customers.get(i - 1).getId(), c.getId());
-                    currDeltaCost += this.problem.getC2CDistance(c.getId(), this.customers.get(i).getId());
-                    currDeltaCost -= this.problem.getC2CDistance(this.customers.get(i - 1).getId(), this.customers.get(i).getId());
+                    double currDeltaCost = problem.getC2CDistance(this.customers.get(i - 1).getId(), c.getId());
+                    currDeltaCost += problem.getC2CDistance(c.getId(), this.customers.get(i).getId());
+                    currDeltaCost -= problem.getC2CDistance(this.customers.get(i - 1).getId(), this.customers.get(i).getId());
 
                     if (currDeltaCost < bestDeltaCost) {
                         bestDeltaCost = currDeltaCost;
                         bestIndex = i;
                     }
                 }
-                double lastDeltaCost = this.problem.getC2CDistance(this.customers.get(this.customers.size() - 1).getId(), c.getId());
-                lastDeltaCost += this.problem.getD2CDistance(this.depot.getId(), c.getId());
-                lastDeltaCost -= this.problem.getD2CDistance(this.depot.getId(), this.customers.get(this.customers.size() - 1).getId());
+                double lastDeltaCost = problem.getC2CDistance(this.customers.get(this.customers.size() - 1).getId(), c.getId());
+                lastDeltaCost += problem.getD2CDistance(this.depot.getId(), c.getId());
+                lastDeltaCost -= problem.getD2CDistance(this.depot.getId(), this.customers.get(this.customers.size() - 1).getId());
 
                 if (lastDeltaCost < bestDeltaCost) {
                     bestDeltaCost = lastDeltaCost;
@@ -132,16 +132,17 @@ public class Vehicle implements Serializable {
         return false;
     }
 
+    public void setCustomer(Customer newCustomer, Customer oldCustomer) {
+        int index = this.customers.indexOf(oldCustomer);
+        this.removeCustomer(oldCustomer);
+        this.insertCustomer(index, newCustomer);
+    }
+
     private void insertCustomer(Customer customer) {
         this.insertCustomer(this.customers.size(), customer);
     }
 
     private void insertCustomer(int i, Customer customer) {
-        for (Customer cc : this.customers) {
-            if (cc.getId() == customer.getId()) {
-                System.out.println("HELLO");
-            }
-        }
         this.currentLoad += customer.getDemand();
         this.setUpdated();
         this.customers.add(i, customer);
@@ -157,19 +158,35 @@ public class Vehicle implements Serializable {
         return this.currentLoad + demand <= this.maxLoad;
     }
 
+    public void reverse() {
+        int k1 = random.nextInt(getNumCustomers() + 1);
+        int k2 = random.nextInt(getNumCustomers() + 1);
+
+        int low = Math.min(k1, k2);
+        int hi = Math.max(k1, k2);
+
+        for (int i = low; i < low + (hi - low)/2; i++) {
+            Customer c1 = this.customers.get(i);
+            Customer c2 = this.customers.get(hi - i - 1);
+
+            this.setCustomer(c1, c2);
+            this.setCustomer(c2, c1);
+        }
+    }
+
     public void clearRoute() {
         this.customers.clear();
         this.currentLoad = 0.0;
         this.setUpdated();
     }
 
-    public double getFitness() {
-        return this.getRouteCost() + this.getPenalty();
+    public double getFitness(MDVRP problem) {
+        return this.getRouteCost(problem) + this.getPenalty();
     }
 
-    public double getRouteCost() {
+    public double getRouteCost(MDVRP problem) {
         if (this.updated) {
-            updateRouteCost();
+            updateRouteCost(problem);
             this.updated = false;
         }
         return this.routeCost;
@@ -179,14 +196,14 @@ public class Vehicle implements Serializable {
         return Math.max(Parameters.PENALTY_DEMAND * (this.currentLoad - this.maxLoad), 0);
     }
 
-    private void updateRouteCost() {
+    private void updateRouteCost(MDVRP problem) {
         this.routeCost = 0;
 
         if (customers.size() == 0) {
             return;
         }
 
-        double depotDistance = this.problem.getD2CDistance(this.depot.getId(), this.customers.get(0).getId());
+        double depotDistance = problem.getD2CDistance(this.depot.getId(), this.customers.get(0).getId());
 
         if (customers.size() == 1) {
             this.routeCost += 2 * depotDistance;
@@ -196,13 +213,14 @@ public class Vehicle implements Serializable {
         }
 
         for (int i = 0; i < customers.size() - 1; i++) {
-            this.routeCost += this.problem.getC2CDistance(this.customers.get(i).getId(), this.customers.get(i + 1).getId());
+            this.routeCost += problem.getC2CDistance(this.customers.get(i).getId(), this.customers.get(i + 1).getId());
         }
 
-        this.routeCost += this.problem.getD2CDistance(this.depot.getId(), this.customers.get(this.customers.size() - 1).getId());
+        this.routeCost += problem.getD2CDistance(this.depot.getId(), this.customers.get(this.customers.size() - 1).getId());
     }
 
     public void setUpdated() {
         this.updated = true;
+        this.depot.setUpdated();
     }
 }
