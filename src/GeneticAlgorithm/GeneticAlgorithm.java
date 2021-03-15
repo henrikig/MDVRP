@@ -33,7 +33,7 @@ public class GeneticAlgorithm {
         for (int i = 0; i < Parameters.GENERATIONS; i++) {
             long elapsedTime = (System.nanoTime() - start)/1000000000;
 
-            if (elapsedTime < 300 && bestSolution.getFitness(this.problem) > Parameters.FITNESS_TARGET) {
+            if (elapsedTime < 150 && bestSolution.getFitness(this.problem) > Parameters.FITNESS_TARGET) {
                 resetPopulation();
 
                 elitism();
