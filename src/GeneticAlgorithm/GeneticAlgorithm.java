@@ -33,14 +33,15 @@ public class GeneticAlgorithm {
         for (int i = 0; i < Parameters.GENERATIONS; i++) {
             long elapsedTime = (System.nanoTime() - start)/1000000000;
 
-            if (elapsedTime < 60 && bestSolution.getFitness(this.problem) > Parameters.FITNESS_TARGET) {
+            if (elapsedTime < 300 && bestSolution.getFitness(this.problem) > Parameters.FITNESS_TARGET) {
                 resetPopulation();
 
                 elitism();
 
                 tournamentSelection();
 
-                nextPopulation();
+                boolean intraDepotCriteria = i % 10 == 0;
+                nextPopulation(intraDepotCriteria);
 
                 getFitness();
 
@@ -106,7 +107,7 @@ public class GeneticAlgorithm {
         }
     }
 
-    public void nextPopulation() {
+    public void nextPopulation(boolean interDepot) {
         for (int i = Parameters.ELITISM; i < Parameters.POPULATION_SIZE; i+=2) {
             if(Math.random() <= Parameters.XOVER_PROB) {
                 Chromosome p1 = this.population.get(i);
@@ -114,12 +115,21 @@ public class GeneticAlgorithm {
 
                 crossover(p1, p2);
 
-
                 if (Math.random() <= Parameters.MUTATION_PROB) {
-                    this.mutation(p1);
+                    if (interDepot) {
+                        this.interDepot(p1);
+                    } else {
+                        this.mutation(p1);
+                    }
+
                 }
                 if (Math.random() <= Parameters.MUTATION_PROB) {
-                    this.mutation(p2);
+                    if (interDepot) {
+                        this.interDepot(p2);
+                    } else {
+                        this.mutation(p2);
+                    }
+
                 }
 
             }
@@ -164,6 +174,10 @@ public class GeneticAlgorithm {
             this.swap(chromosome);
 
         }
+    }
+
+    public void interDepot(Chromosome chromosome) {
+        chromosome.interDepot(problem);
     }
 
     public void customerReroute(Chromosome chromosome) {
@@ -222,8 +236,9 @@ public class GeneticAlgorithm {
     }
 
     public String createSolution() {
-        if (bestSolution.getFitness(this.problem) > 15000) {
-            bestSolution = this.parents.get(this.parents.size()-1);
+
+        if (bestSolution.getFitness(this.problem) > 8000) {
+            bestSolution = this.parents.get(parents.size()-1);
         }
 
         StringBuilder solution = new StringBuilder(Math.round(bestSolution.getFitness(this.problem) * 100.0) / 100.0 + "\n");

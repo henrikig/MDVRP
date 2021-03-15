@@ -43,6 +43,15 @@ public class Vehicle implements Serializable {
         return this.customers.get(i);
     }
 
+    public Customer getCustomerById(int id) {
+        for (Customer customer : this.customers) {
+            if (customer.getId() == id) {
+                return customer;
+            }
+        }
+        return null;
+    }
+
     public Customer getFirstCustomer() {
         return this.customers.get(0);
     }
@@ -270,12 +279,18 @@ public class Vehicle implements Serializable {
 
     public double getPenalty(MDVRP problem) {
         if (this.maxLength == 0) {
-            return Math.max(Parameters.PENALTY_DEMAND * (this.currentLoad - this.maxLoad), 0);
+            return getDemandPenalty();
         } else {
-            double penalty = Math.max(Parameters.PENALTY_DEMAND * (this.currentLoad - this.maxLoad), 0);
-            penalty += Math.max(Parameters.PENALTY_LENGTH * (this.getRouteCost(problem) - this.maxLength), 0);
-            return penalty;
+            return getDemandPenalty() + getLengthPenalty(problem);
         }
+    }
+
+    public double getDemandPenalty() {
+        return Math.max(Parameters.PENALTY_DEMAND * (this.currentLoad - this.maxLoad), 0);
+    }
+
+    public double getLengthPenalty(MDVRP problem) {
+        return Math.max(Parameters.PENALTY_LENGTH * (this.getRouteCost(problem) - this.maxLength), 0);
     }
 
     private void updateRouteCost(MDVRP problem) {

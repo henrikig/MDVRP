@@ -1,22 +1,28 @@
 package Models;
 
+import Utilities.Parameters;
 import Utilities.Utils;
 import org.javatuples.Pair;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Random;
 
 public class MDVRP implements Serializable {
 
     private final Map<Integer, ArrayList<Double>> depots;
     private final Map<Integer, ArrayList<Double>> customers;
+    private final ArrayList<ArrayList<Integer>> swappable;
+    private boolean isCalculated;
     private final int numDepots;
     private final int numCustomers;
     private final int maxVehicles;
     private final double maxLoad;
     private final double maxLength;
     private final double[][] distances;
+    private final Random random = new Random();
 
     public MDVRP(
             Map<Integer, ArrayList<Double>> depots,
@@ -34,6 +40,8 @@ public class MDVRP implements Serializable {
         this.maxLoad = maxLoad;
         this.maxLength = maxLength;
         this.distances = new double[numDepots + numCustomers][numDepots + numCustomers];
+        this.swappable = new ArrayList<>();
+        this.isCalculated = false;
 
         this.initDistances();
     }
@@ -78,6 +86,14 @@ public class MDVRP implements Serializable {
 
     public ArrayList<Double> getDepot(int depotId) {
         return this.customers.get(depotId);
+    }
+
+    public boolean isCalculated() {
+        return isCalculated;
+    }
+
+    public void setCalculated() {
+        isCalculated = true;
     }
 
     private void initDistances() {
@@ -136,7 +152,7 @@ public class MDVRP implements Serializable {
         }
     }
 
-    public Pair<Integer, Double> getClosestDepot(int customerId) {
+    public int getClosestDepot(int customerId) {
         double minDistance = Double.POSITIVE_INFINITY;
         int closestDepot = 0;
 
@@ -151,6 +167,36 @@ public class MDVRP implements Serializable {
             }
         }
 
-        return new Pair<>(closestDepot, minDistance);
+        return closestDepot;
+    }
+
+    public void getSecondClosestDepot(int customerId, int closestDepot) {
+        double minDistance = Double.POSITIVE_INFINITY;
+        int secondClosest = -1;
+
+        double closestDistance = getD2CDistance(closestDepot, customerId);
+
+        for (int depotId = 0; depotId < this.numDepots; depotId++ ) {
+            if (depotId == closestDepot) {
+                continue;
+            }
+
+            double currentDistance = getD2CDistance(depotId, customerId);
+
+            double swapCriteria = (currentDistance - closestDistance) / closestDistance;
+
+            if (currentDistance < minDistance && swapCriteria <= Parameters.SWAP_BOUND) {
+                minDistance = currentDistance;
+                secondClosest = depotId;
+            }
+        }
+
+        if (secondClosest >= 0) {
+            swappable.add(new ArrayList<>(Arrays.asList(customerId, closestDepot, secondClosest)));
+        }
+    }
+
+    public ArrayList<Integer> getRandomSwappable() {
+        return this.swappable.get(random.nextInt(this.swappable.size()));
     }
 }

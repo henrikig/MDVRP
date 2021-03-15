@@ -65,6 +65,16 @@ public class Depot implements Serializable {
         return this.vehicles;
     }
 
+    public Customer getCustomerById(int id) {
+        for (Vehicle vehicle : this.vehicles) {
+            Customer customer = vehicle.getCustomerById(id);
+            if (customer != null) {
+                return customer;
+            }
+        }
+        return null;
+    }
+
     public boolean removeCustomer(Customer c) {
         for (Vehicle vehicle : this.vehicles) {
             if (vehicle.removeCustomer(c)) {
