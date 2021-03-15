@@ -45,6 +45,8 @@ public class GeneticAlgorithm {
                 getFitness();
 
                 bestFeasible();
+
+
             } else {
                 break;
             }
@@ -122,6 +124,7 @@ public class GeneticAlgorithm {
 
             }
         }
+
         Collections.shuffle(this.population);
     }
 
@@ -150,7 +153,7 @@ public class GeneticAlgorithm {
 
         if (mutationType < 0.4) {
 
-            this.customerReroute(chromosome);
+            this.reverse(chromosome);
 
         } else if (mutationType < 0.8) {
 
@@ -206,7 +209,7 @@ public class GeneticAlgorithm {
         for (int i = this.parents.size() - 1; i >= 0; i--) {
             Chromosome c = this.parents.get(i);
 
-            if (c.isFeasible()) {
+            if (c.isFeasible(this.problem)) {
                 System.out.println("BEST FEASIBLE: " + c.getFitness(this.problem));
 
                 if (c.getFitness(this.problem) < bestSolution.getFitness(this.problem)) {
@@ -219,6 +222,10 @@ public class GeneticAlgorithm {
     }
 
     public String createSolution() {
+        if (bestSolution.getFitness(this.problem) > 15000) {
+            bestSolution = this.parents.get(this.parents.size()-1);
+        }
+
         StringBuilder solution = new StringBuilder(Math.round(bestSolution.getFitness(this.problem) * 100.0) / 100.0 + "\n");
 
         for (Depot depot : bestSolution.getDepots()) {

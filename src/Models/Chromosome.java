@@ -84,13 +84,21 @@ public class Chromosome implements Serializable {
         }
     }
 
-    public double getFitness(MDVRP problem) {
-        return depots.stream().mapToDouble(d -> d.getRouteCosts(problem)).sum();
+    public void checkNumCustomers() {
+        int custCount = depots.stream().mapToInt(Depot::getNumCustomers).sum();
+        if (custCount != this.numCustomers) {
+            System.out.println("HELLO");
+        }
     }
 
-    public boolean isFeasible() {
+    public double getFitness(MDVRP problem) {
+
+        return depots.stream().mapToDouble(d -> d.getFitness(problem)).sum();
+    }
+
+    public boolean isFeasible(MDVRP problem) {
         for (Depot depot : this.depots) {
-            if (!depot.isFeasible()) {
+            if (!depot.isFeasible(problem)) {
                 return false;
             }
         }

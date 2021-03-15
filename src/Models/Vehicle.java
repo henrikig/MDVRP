@@ -10,6 +10,7 @@ import java.util.Random;
 public class Vehicle implements Serializable {
 
     private final double maxLoad;
+    private final double maxLength;
     private double currentLoad;
     private ArrayList<Customer> customers;
     private final Depot depot;
@@ -17,8 +18,9 @@ public class Vehicle implements Serializable {
     private double routeCost;
     private boolean updated;
 
-    public Vehicle(double maxLoad, Depot depot) {
+    public Vehicle(double maxLoad, double maxLength, Depot depot) {
         this.maxLoad = maxLoad;
+        this.maxLength = maxLength;
         this.depot = depot;
         this.updated = true;
         this.customers = new ArrayList<>();
@@ -53,11 +55,15 @@ public class Vehicle implements Serializable {
         return this.customers.get(this.customers.size() - 2);
     }
 
-    public boolean getFeasibility() {
-        return this.currentLoad <= this.maxLoad;
+    public boolean getFeasibility(MDVRP problem) {
+        if (this.maxLength == 0) {
+            return this.currentLoad <= this.maxLoad;
+        } else {
+            return this.currentLoad <= this.maxLoad && this.getRouteCost(problem) <= this.maxLength;
+        }
     }
 
-    public boolean insertCustomerIfFeasible(Customer customer) {
+    public boolean insertCustomerIfFeasible(Customer customer, MDVRP problem) {
         double demand = customer.getDemand();
 
         if (this.currentLoad + demand < this.maxLoad) {
@@ -65,44 +71,114 @@ public class Vehicle implements Serializable {
             this.insertCustomer(customer);
 
             return true;
+
         }
         return false;
     }
 
+    public boolean testLengthIncrement(Customer c, int index, MDVRP problem) {
+        if (this.maxLength == 0) {
+            return true;
+        }
+
+        double deltaLength;
+
+        if (index == 0) {
+            if (this.getNumCustomers() == 0) {
+                deltaLength = 2 * problem.getD2CDistance(this.depot.getId(), c.getId());
+            } else {
+                deltaLength = problem.getD2CDistance(this.depot.getId(), c.getId());
+
+                deltaLength += problem.getC2CDistance(c.getId(), this.getCustomer(0).getId());
+
+                deltaLength -= problem.getD2CDistance(this.depot.getId(), this.getCustomer(0).getId());
+            }
+        } else if (index == this.customers.size()) {
+
+            deltaLength = problem.getD2CDistance(this.depot.getId(), c.getId());
+
+            deltaLength += problem.getC2CDistance(this.getLastCustomer().getId(), c.getId());
+
+            deltaLength -= problem.getD2CDistance(this.depot.getId(), this.getLastCustomer().getId());
+
+
+        } else {
+            deltaLength = problem.getC2CDistance(this.getCustomer(index-1).getId(), c.getId());
+
+            deltaLength += problem.getC2CDistance(c.getId(), this.getCustomer(index).getId());
+
+            deltaLength -= problem.getC2CDistance(this.getCustomer(index-1).getId(), this.getCustomer(index).getId());
+        }
+
+        return this.getRouteCost(problem) + deltaLength < this.maxLength;
+    }
+
     public Triplet<Integer, Double, Boolean> bestInsertion(Customer c, MDVRP problem) {
-        Boolean feasible = this.testDemandIncrement(c.getDemand());
+        boolean feasible = this.testDemandIncrement(c.getDemand());
         if (this.customers.size() == 0) {
             double routeCost = 2 * problem.getD2CDistance(this.depot.getId(), c.getId());
 
-            return Triplet.with(0, routeCost, feasible);
+            boolean allowedLength = testLengthIncrement(c, 0, problem);
+            return Triplet.with(0, routeCost, feasible && allowedLength);
 
         } else {
             int bestIndex = 0;
             double bestDeltaCost = problem.getD2CDistance(this.depot.getId(), c.getId());
             bestDeltaCost += problem.getC2CDistance(c.getId(), this.customers.get(0).getId());
             bestDeltaCost -= problem.getD2CDistance(this.depot.getId(), this.customers.get(0).getId());
+            boolean lengthFeasible = testLengthIncrement(c, 0, problem);
 
             if (this.customers.size() > 1) {
                 for (int i = 1; i < this.customers.size(); i++) {
                     double currDeltaCost = problem.getC2CDistance(this.customers.get(i - 1).getId(), c.getId());
                     currDeltaCost += problem.getC2CDistance(c.getId(), this.customers.get(i).getId());
                     currDeltaCost -= problem.getC2CDistance(this.customers.get(i - 1).getId(), this.customers.get(i).getId());
+                    boolean currFeasible = testLengthIncrement(c, i, problem);
 
-                    if (currDeltaCost < bestDeltaCost) {
-                        bestDeltaCost = currDeltaCost;
-                        bestIndex = i;
+                    if (currFeasible) {
+                        if (currDeltaCost < bestDeltaCost && lengthFeasible) {
+                            bestDeltaCost = currDeltaCost;
+                            bestIndex = i;
+                        } else if (!lengthFeasible) {
+                            bestDeltaCost = currDeltaCost;
+                            bestIndex = i;
+                            lengthFeasible = true;
+                        }
+                    } else {
+                        if (!lengthFeasible) {
+                            if (currDeltaCost < bestDeltaCost) {
+                                bestDeltaCost = currDeltaCost;
+                                bestIndex = i;
+                            }
+                        }
                     }
+
+
                 }
                 double lastDeltaCost = problem.getC2CDistance(this.customers.get(this.customers.size() - 1).getId(), c.getId());
                 lastDeltaCost += problem.getD2CDistance(this.depot.getId(), c.getId());
                 lastDeltaCost -= problem.getD2CDistance(this.depot.getId(), this.customers.get(this.customers.size() - 1).getId());
+                boolean lastFeasible = testLengthIncrement(c, this.customers.size(), problem);
 
-                if (lastDeltaCost < bestDeltaCost) {
-                    bestDeltaCost = lastDeltaCost;
-                    bestIndex = this.customers.size();
+                if (lastFeasible) {
+                    if (lastDeltaCost < bestDeltaCost && lengthFeasible) {
+                        bestDeltaCost = lastDeltaCost;
+                        bestIndex = this.customers.size();
+                    } else if (!lengthFeasible){
+                        bestDeltaCost = lastDeltaCost;
+                        bestIndex = this.customers.size();
+                        lengthFeasible = true;
+                    }
+                } else {
+                    if (!lengthFeasible) {
+                        if (lastDeltaCost < bestDeltaCost) {
+                            bestDeltaCost = lastDeltaCost;
+                            bestIndex = this.customers.size();
+                        }
+                    }
                 }
             }
-            return Triplet.with(bestIndex, bestDeltaCost, feasible);
+            return Triplet.with(bestIndex, bestDeltaCost, feasible && lengthFeasible);
         }
     }
 
@@ -181,7 +257,7 @@ public class Vehicle implements Serializable {
     }
 
     public double getFitness(MDVRP problem) {
-        return this.getRouteCost(problem) + this.getPenalty();
+        return this.getRouteCost(problem) + this.getPenalty(problem);
     }
 
     public double getRouteCost(MDVRP problem) {
@@ -192,8 +268,14 @@ public class Vehicle implements Serializable {
         return this.routeCost;
     }
 
-    public double getPenalty() {
-        return Math.max(Parameters.PENALTY_DEMAND * (this.currentLoad - this.maxLoad), 0);
+    public double getPenalty(MDVRP problem) {
+        if (this.maxLength == 0) {
+            return Math.max(Parameters.PENALTY_DEMAND * (this.currentLoad - this.maxLoad), 0);
+        } else {
+            double penalty = Math.max(Parameters.PENALTY_DEMAND * (this.currentLoad - this.maxLoad), 0);
+            penalty += Math.max(Parameters.PENALTY_LENGTH * (this.getRouteCost(problem) - this.maxLength), 0);
+            return penalty;
+        }
     }
 
     private void updateRouteCost(MDVRP problem) {

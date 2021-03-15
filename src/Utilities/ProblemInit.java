@@ -30,7 +30,9 @@ public class ProblemInit {
         int numDepots = Integer.parseInt(problemInfoSplit[2]);
 
         List<String> maxLoadLine = Arrays.asList(fileContent.get(1).split("\\s+"));
+        double maxLength = Double.parseDouble(maxLoadLine.get(0));
         Double maxLoad = Double.parseDouble(maxLoadLine.get(1));
+
 
         Map<Integer, ArrayList<Double>> depots = new HashMap<>();
 
@@ -58,7 +60,7 @@ public class ProblemInit {
             customers.put(customer - numDepots - 1, customerLoc);
         }
 
-        return new MDVRP(depots, customers, numDepots, numCustomers, maxVehicles, maxLoad);
+        return new MDVRP(depots, customers, numDepots, numCustomers, maxVehicles, maxLoad, maxLength);
 
 
     }

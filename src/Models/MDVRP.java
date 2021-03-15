@@ -15,6 +15,7 @@ public class MDVRP implements Serializable {
     private final int numCustomers;
     private final int maxVehicles;
     private final double maxLoad;
+    private final double maxLength;
     private final double[][] distances;
 
     public MDVRP(
@@ -23,13 +24,15 @@ public class MDVRP implements Serializable {
             int numDepots,
             int numCustomers,
             int maxVehicles,
-            double maxLoad) {
+            double maxLoad,
+            double maxLength) {
         this.depots = depots;
         this.customers = customers;
         this.numDepots = numDepots;
         this.numCustomers = numCustomers;
         this.maxVehicles = maxVehicles;
         this.maxLoad = maxLoad;
+        this.maxLength = maxLength;
         this.distances = new double[numDepots + numCustomers][numDepots + numCustomers];
 
         this.initDistances();
@@ -56,6 +59,10 @@ public class MDVRP implements Serializable {
     }
 
     public double getMaxLoad() { return maxLoad; }
+
+    public double getMaxLength() {
+        return maxLength;
+    }
 
     public double getC2CDistance(int c1, int c2) {
         return this.distances[c1 + numDepots][c2 + numDepots];
