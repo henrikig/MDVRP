@@ -3,10 +3,7 @@ package Models;
 import org.javatuples.Pair;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Chromosome implements Serializable {
 
@@ -26,6 +23,15 @@ public class Chromosome implements Serializable {
 
     public Depot getDepot(int i) {
         return this.depots.get(i);
+    }
+
+    public Depot getDepotById(int id) {
+        for (Depot depot : depots) {
+            if (depot.getId() == id) {
+                return depot;
+            }
+        }
+        return null;
     }
 
     public ArrayList<Depot> getDepots() {
@@ -49,25 +55,29 @@ public class Chromosome implements Serializable {
 
             ArrayList<Double> customer = problem.getCustomer(customerId);
             double customerDemand = customer.get(2);
-            Pair<Integer, Double> closestDepot = problem.getClosestDepot(customerId);
+            int closestDepot = problem.getClosestDepot(customerId);
 
-            int closestId = closestDepot.getValue0();
+            if (!problem.isCalculated()) {
+                problem.getSecondClosestDepot(customerId, closestDepot);
+            }
 
             Customer c = new Customer(customerId, customerDemand);
 
-            if (customers.containsKey(closestId)) {
+            if (customers.containsKey(closestDepot)) {
 
-                customers.get(closestId).add(c);
+                customers.get(closestDepot).add(c);
 
             } else {
 
                 ArrayList<Customer> newCustomerList = new ArrayList<>();
 
                 newCustomerList.add(c);
-                customers.put(closestId, newCustomerList);
+                customers.put(closestDepot, newCustomerList);
 
             }
         }
+
+        problem.setCalculated();
 
         for (int depotId = 0; depotId < this.numDepots; depotId++) {
             ArrayList<Customer> depotCustomers = customers.get(depotId);
@@ -84,13 +94,42 @@ public class Chromosome implements Serializable {
         }
     }
 
-    public double getFitness(MDVRP problem) {
-        return depots.stream().mapToDouble(d -> d.getRouteCosts(problem)).sum();
+    public void interDepot(MDVRP problem) {
+        ArrayList<Integer> swappable = problem.getRandomSwappable();
+
+        Depot depot1 = this.getDepotById(swappable.get(1));
+        Depot depot2 = this.getDepotById(swappable.get(2));
+
+        int customerId = swappable.get(0);
+
+        Customer customer = depot1.getCustomerById(customerId);
+
+        if (customer != null) {
+            depot1.removeCustomer(customer);
+            depot2.bestCostInsertions(new ArrayList<>(Collections.singletonList(customer)), problem);
+        } else {
+            customer = depot2.getCustomerById(customerId);
+            depot2.removeCustomer(customer);
+            depot1.bestCostInsertions(new ArrayList<>(Collections.singletonList(customer)), problem);
+        }
+
     }
 
-    public boolean isFeasible() {
+    public void checkNumCustomers() {
+        int custCount = depots.stream().mapToInt(Depot::getNumCustomers).sum();
+        if (custCount != this.numCustomers) {
+            System.out.println("HELLO");
+        }
+    }
+
+    public double getFitness(MDVRP problem) {
+
+        return depots.stream().mapToDouble(d -> d.getFitness(problem)).sum();
+    }
+
+    public boolean isFeasible(MDVRP problem) {
         for (Depot depot : this.depots) {
-            if (!depot.isFeasible()) {
+            if (!depot.isFeasible(problem)) {
                 return false;
             }
         }
