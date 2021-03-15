@@ -5,7 +5,7 @@ public class Parameters {
     public final static String PROBLEM_FOLDER = "./data/Testing Data/Data Files/";
     public final static String SOLUTIONS_FOLDER = "./data/Solution files/";
     public final static String PLOT_FILE = "./plots/mdvrp_plot.py";
-    public final static String PROBLEM_FILE = "p01";
+    public final static String PROBLEM_FILE = "p11";
     public final static Double FITNESS_TARGET = Double.NEGATIVE_INFINITY;
 
     public final static int POPULATION_SIZE = 400;
