@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.util.*;
 
 public class ProblemInit {
-    public static MDVRP initializeProblem() {
-        String filename = Parameters.PROBLEM_FOLDER + Parameters.PROBLEM_FILE;
+    public static MDVRP initializeProblem(String filenumber) {
+        String filename = Parameters.PROBLEM_FOLDER + filenumber;
         ArrayList<String> fileContent = new ArrayList<>();
 
         // Read the problem file line for line

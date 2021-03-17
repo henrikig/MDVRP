@@ -18,8 +18,8 @@ public class Utils {
 
     }
 
-    public static void writeSolution(String solution) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(Parameters.SOLUTIONS_FOLDER + Parameters.PROBLEM_FILE + ".res"));
+    public static void writeSolution(String solution, String filename) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(Parameters.SOLUTIONS_FOLDER + filename + ".res"));
 
         writer.write(solution);
 

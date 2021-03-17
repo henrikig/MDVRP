@@ -2,8 +2,10 @@ package GeneticAlgorithm;
 
 import Models.*;
 import Utilities.Parameters;
+import Utilities.Utils;
 import org.apache.commons.lang.SerializationUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
@@ -22,7 +24,7 @@ public class GeneticAlgorithm {
         this.parents = new ArrayList<>(Parameters.POPULATION_SIZE);
     }
 
-    public String main() {
+    public String main() throws IOException {
         initPopulation();
         scheduleRoutes(this.problem);
 
@@ -31,9 +33,19 @@ public class GeneticAlgorithm {
         long start = System.nanoTime();
 
         for (int i = 0; i < Parameters.GENERATIONS; i++) {
+
+            if (i % 100 == 0) {
+                storeSolution();
+
+                System.out.println("========= Generation #" + i + " =========");
+                System.out.println("Best Fitness: " + bestSolution.getFitness(problem));
+                System.out.println("Temporary solution stored.");
+            }
+
             long elapsedTime = (System.nanoTime() - start)/1000000000;
 
-            if (elapsedTime < 150 && bestSolution.getFitness(this.problem) > Parameters.FITNESS_TARGET) {
+            if (elapsedTime < Parameters.MAX_TIME && bestSolution.getFitness(this.problem) > Parameters.FITNESS_TARGET) {
+
                 resetPopulation();
 
                 elitism();
@@ -41,17 +53,18 @@ public class GeneticAlgorithm {
                 tournamentSelection();
 
                 boolean intraDepotCriteria = i % 10 == 0;
+
                 nextPopulation(intraDepotCriteria);
 
                 getFitness();
 
                 bestFeasible();
 
-
             } else {
-                break;
-            }
 
+                break;
+
+            }
         }
 
         return createSolution();
@@ -92,17 +105,26 @@ public class GeneticAlgorithm {
 
             if (Math.random() <= Parameters.KEEP_BEST) {
                 if (Chromosome.compare(p1, p2, this.problem) > 0) {
+
                     clone = (Chromosome) SerializationUtils.clone(p1);
+
                 } else {
+
                     clone = (Chromosome) SerializationUtils.clone(p2);
+
                 }
             } else {
                 if (random.nextInt(2) == 1) {
+
                     clone = (Chromosome) SerializationUtils.clone(p1);
+
                 } else {
+
                     clone = (Chromosome) SerializationUtils.clone(p2);
+
                 }
             }
+
             population.add(clone);
         }
     }
@@ -213,18 +235,18 @@ public class GeneticAlgorithm {
             totalFitness += c.getFitness(this.problem);
             counter++;
         }
-        System.out.println("AVG: " + totalFitness/counter);
-        System.out.println("BEST: " + this.parents.get(this.parents.size()-1).getFitness(this.problem));
+        //System.out.println("AVG: " + totalFitness/counter);
+        //System.out.println("BEST: " + this.parents.get(this.parents.size()-1).getFitness(this.problem));
     }
 
     public void bestFeasible() {
-        this.parents.sort((c1, c2) -> Chromosome.compare(c1, c2, this.problem));
+        this.population.sort((c1, c2) -> Chromosome.compare(c1, c2, this.problem));
 
         for (int i = this.parents.size() - 1; i >= 0; i--) {
             Chromosome c = this.parents.get(i);
 
             if (c.isFeasible(this.problem)) {
-                System.out.println("BEST FEASIBLE: " + c.getFitness(this.problem));
+                //System.out.println("BEST FEASIBLE: " + c.getFitness(this.problem));
 
                 if (c.getFitness(this.problem) < bestSolution.getFitness(this.problem)) {
                     bestSolution = c;
@@ -236,10 +258,6 @@ public class GeneticAlgorithm {
     }
 
     public String createSolution() {
-
-        if (bestSolution.getFitness(this.problem) > 8000) {
-            bestSolution = this.parents.get(parents.size()-1);
-        }
 
         StringBuilder solution = new StringBuilder(Math.round(bestSolution.getFitness(this.problem) * 100.0) / 100.0 + "\n");
 
@@ -268,5 +286,11 @@ public class GeneticAlgorithm {
             }
         }
         return solution.toString();
+    }
+
+    public void storeSolution() throws IOException {
+        String tempSolution = createSolution();
+
+        Utils.writeSolution(tempSolution, "temporary");
     }
 }

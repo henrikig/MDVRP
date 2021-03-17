@@ -9,16 +9,16 @@ import java.io.IOException;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void runProblem(String filename) throws IOException {
         long startTime = System.nanoTime();
 
-        MDVRP problem = ProblemInit.initializeProblem();
+        MDVRP problem = ProblemInit.initializeProblem(filename);
 
         GeneticAlgorithm ga = new GeneticAlgorithm(problem);
 
         String solution = ga.main();
 
-        Utils.writeSolution(solution);
+        Utils.writeSolution(solution, filename);
 
         long endTime = System.nanoTime();
 
@@ -29,10 +29,27 @@ public class Main {
         String[] cmd = {
                 "python3",
                 Parameters.PLOT_FILE,
-                Parameters.PROBLEM_FILE
+                filename
         };
 
         Runtime.getRuntime().exec(cmd);
+    }
+
+    public static void main(String[] args) throws IOException {
+
+        if (Parameters.RUN_ALL) {
+            for (String filename : Parameters.ALL_PROBLEMS) {
+
+                Main.runProblem(filename);
+
+            }
+        } else {
+
+            Main.runProblem(Parameters.PROBLEM_FILE);
+
+        }
+
+
 
     }
 }
